@@ -354,23 +354,23 @@ class DataPreprocessor:
     def apply_smote(self, X_train: pd.DataFrame, y_train: pd.Series, 
                    random_state: int = 42) -> Tuple[pd.DataFrame, pd.Series]:
         """
-        应用SMOTE平衡数据集
-        
+        应用SMOTE来平衡训练数据集。
+
         Args:
             X_train: 训练集特征
-            y_train: 训练集目标变量
+            y_train: 训练集标签
             random_state: 随机种子
-            
+
         Returns:
-            平衡后的训练集
+            平衡后的训练集特征和标签
         """
         logger.info("Applying SMOTE for class balancing...")
         
         smote = SMOTE(random_state=random_state)
         X_train_balanced, y_train_balanced = smote.fit_resample(X_train, y_train)
         
-        logger.info(f"Before SMOTE - Class distribution: {pd.Series(y_train).value_counts().to_dict()}")
-        logger.info(f"After SMOTE - Class distribution: {pd.Series(y_train_balanced).value_counts().to_dict()}")
+        logger.info(f"Before SMOTE - Class distribution: {y_train.value_counts().to_dict()}")
+        logger.info(f"After SMOTE - Class distribution: {y_train_balanced.value_counts().to_dict()}")
         
         return X_train_balanced, y_train_balanced
     

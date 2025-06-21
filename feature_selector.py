@@ -134,6 +134,29 @@ class FeatureSelector:
         
         return selectors[method](X, y, top_n)
     
+    def select_features_multiple_topn(self, X: pd.DataFrame, y: pd.Series, top_n_list: List[int]) -> Dict[int, Dict[str, List[str]]]:
+        """
+        使用多个top_n值运行所有特征选择方法
+        
+        Args:
+            X: 特征矩阵
+            y: 目标变量
+            top_n_list: top_n值列表，如[5, 10, 15]
+            
+        Returns:
+            嵌套字典，格式为 {top_n: {method: features}}
+        """
+        logger.info(f"Running feature selection with multiple top_n values: {top_n_list}")
+        
+        results = {}
+        
+        for top_n in top_n_list:
+            logger.info(f"Processing top_n = {top_n}")
+            results[top_n] = self.select_all_features(X, y, top_n)
+            
+        logger.info("Multiple top_n feature selection completed")
+        return results
+    
     def select_all_features(self, X: pd.DataFrame, y: pd.Series, top_n: int = 15) -> Dict[str, List[str]]:
         """
         使用所有方法选择特征
@@ -310,6 +333,120 @@ class FeatureSelector:
         
         plt.show()
 
+    def display_multiple_topn_results(self, multiple_results: Dict[int, Dict[str, List[str]]]) -> None:
+        """
+        以表格形式显示多个top_n值的结果
+
+        Args:
+            multiple_results: select_features_multiple_topn的返回结果
+        """
+        try:
+            from IPython.display import display
+            import pandas as pd
+        except ImportError:
+            logger.warning("IPython or pandas not found. Displaying as plain text.")
+            display = print
+
+        # 创建详细结果表格
+        table_data = []
+        for top_n, results_for_top_n in multiple_results.items():
+            for method, features in results_for_top_n.items():
+                table_data.append({
+                    'Top N': top_n,
+                    'Method': method,
+                    'Selected Features': features
+                })
+        
+        results_df = pd.DataFrame(table_data)
+        
+        print("\n📊 多个Top N值特征选择详细结果:")
+        with pd.option_context('display.max_colwidth', 100):
+            display(results_df)
+        
+        # 创建共同特征总结表格
+        common_features_data = []
+        methods = list(multiple_results.get(list(multiple_results.keys())[0], {}).keys())
+        num_methods = len(methods)
+
+        for top_n, results_for_top_n in multiple_results.items():
+            # 临时设置当前结果以使用get_common_features
+            self.selected_features = results_for_top_n
+            common_feats_2 = self.get_common_features(min_methods=2)
+            common_feats_all = self.get_common_features(min_methods=num_methods)
+            
+            common_features_data.append({
+                'Top N': top_n,
+                f'Common Features (>=2 methods)': common_feats_2,
+                f'Common Features (all {num_methods} methods)': common_feats_all
+            })
+        
+        common_features_df = pd.DataFrame(common_features_data)
+        
+        print("\n🔍 各Top N值下的共同特征总结:")
+        with pd.option_context('display.max_colwidth', 100):
+            display(common_features_df)
+
+    def plot_feature_selection_matrix(self, multiple_results: Dict[int, Dict[str, List[str]]], save_path: str = None) -> None:
+        """
+        以矩阵热力图的形式可视化特征选择结果
+
+        Args:
+            multiple_results: 来自 select_features_multiple_topn 的结果
+            save_path: 图片保存路径
+        """
+        try:
+            import matplotlib.pyplot as plt
+            import seaborn as sns
+            plt.rcParams['font.sans-serif'] = ['SimHei', 'Arial Unicode MS']
+            plt.rcParams['axes.unicode_minus'] = False
+        except ImportError:
+            logger.warning("matplotlib or seaborn not found. Skipping plotting.")
+            return
+            
+        print("\n🎨 生成特征选择矩阵可视化图表:")
+        
+        top_n_values = sorted(multiple_results.keys())
+        num_top_n = len(top_n_values)
+
+        fig, axes = plt.subplots(1, num_top_n, figsize=(6 * num_top_n, 10), sharey=False)
+        if num_top_n == 1:
+            axes = [axes]
+
+        fig.suptitle('不同Top N值下的特征选择矩阵', fontsize=16, y=1.02)
+
+        for i, top_n in enumerate(top_n_values):
+            results_for_top_n = multiple_results[top_n]
+            
+            # 获取当前 top_n 下所有被选中的特征
+            all_selected_features = sorted(list(set(feat for feats in results_for_top_n.values() for feat in feats)))
+            
+            if not all_selected_features:
+                axes[i].text(0.5, 0.5, 'No features selected', ha='center', va='center')
+                axes[i].set_title(f'Top N = {top_n}')
+                continue
+
+            # 构建0/1矩阵
+            selection_matrix = pd.DataFrame(index=all_selected_features)
+            for method, features in results_for_top_n.items():
+                selection_matrix[method] = selection_matrix.index.isin(features).astype(int)
+            
+            # 绘制热力图
+            sns.heatmap(selection_matrix, ax=axes[i], annot=True, cmap="YlGnBu", cbar=False, linewidths=.5)
+            axes[i].set_title(f'Top N = {top_n}')
+            axes[i].set_xlabel('特征选择方法')
+            if i == 0:
+                axes[i].set_ylabel('特征名称')
+            else:
+                axes[i].set_ylabel('')
+
+        plt.tight_layout(rect=[0, 0, 1, 0.96])
+
+        if save_path:
+            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+            logger.info(f"Feature selection matrix plot saved to: {save_path}")
+
+        plt.show()
+
 def main():
     """主函数，用于测试特征选择功能"""
     from data_loader import DataLoader
@@ -350,6 +487,15 @@ def main():
     # 绘制特征重要性
     feature_selector.plot_feature_importance(save_path="outputs/feature_importance.png")
     
+    # 使用多个top_n值运行所有特征选择方法
+    multiple_results = feature_selector.select_features_multiple_topn(X_train_balanced, y_train_balanced, [5, 10, 15])
+    
+    # 绘制多个top_n值的结果
+    feature_selector.display_multiple_topn_results(multiple_results)
+
+    # 可视化特征选择矩阵
+    feature_selector.plot_feature_selection_matrix(multiple_results, save_path='outputs/feature_selection_matrix.png')
+
     return selected_features
 
 if __name__ == "__main__":
