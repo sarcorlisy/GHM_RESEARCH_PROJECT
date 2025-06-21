@@ -1,0 +1,53 @@
+{
+    "L1": [
+        "age_midpoint",
+        "age_group",
+        "age",
+        "tolbutamide",
+        "change",
+        "tolazamide",
+        "rosiglitazone",
+        "pioglitazone",
+        "miglitol",
+        "glyburide-metformin",
+        "glimepiride",
+        "nateglinide",
+        "metformin",
+        "glyburide",
+        "glipizide-metformin"
+    ],
+    "MutualInfo": [
+        "num_lab_procedures",
+        "rolling_avg",
+        "num_medications",
+        "time_in_hospital",
+        "age_midpoint",
+        "num_procedures",
+        "number_diagnoses",
+        "number_inpatient",
+        "number_outpatient",
+        "admission_source_desc",
+        "discharge_disposition_desc",
+        "diag_1",
+        "number_emergency",
+        "diag_3",
+        "medical_specialty"
+    ],
+    "TreeImportance": [
+        "number_inpatient",
+        "age_midpoint",
+        "time_in_hospital",
+        "num_procedures",
+        "number_diagnoses",
+        "change",
+        "encounter_index",
+        "discharge_disposition_desc",
+        "rolling_avg",
+        "number_emergency",
+        "insulin",
+        "diag_1",
+        "num_lab_procedures",
+        "number_outpatient",
+        "diag_2"
+    ]
+}
