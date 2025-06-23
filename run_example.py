@@ -1,20 +1,20 @@
 """
-Hospital Readmission Prediction Pipeline - 使用示例
+Hospital Readmission Prediction Pipeline - Usage Example
 """
 import sys
 import os
 from pathlib import Path
 
-# 添加当前目录到Python路径
+# Add the current directory to the Python path
 sys.path.append(str(Path(__file__).parent))
 
 from main_pipeline import HospitalReadmissionPipeline
 import logging
 
 def main():
-    """运行pipeline示例"""
+    """Run the pipeline example"""
     
-    # 设置日志级别
+    # Set logging level
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
     
@@ -22,15 +22,15 @@ def main():
     print("=" * 50)
     
     try:
-        # 初始化pipeline
+        # Initialize the pipeline
         logger.info("Initializing pipeline...")
         pipeline = HospitalReadmissionPipeline()
         
-        # 运行完整pipeline
+        # Run the full pipeline
         logger.info("Starting full pipeline execution...")
         results = pipeline.run_full_pipeline()
         
-        # 显示结果摘要
+        # Display the results summary
         print("\n✅ Pipeline completed successfully!")
         print("\n📊 Results Summary:")
         print("-" * 30)
@@ -45,12 +45,12 @@ def main():
         print(f"Total Features Selected: {len(results['selected_features']['MutualInfo'])}")
         print(f"Training Samples: {len(results['training_results'])} models trained")
         
-        # 显示所有模型性能
+        # Display performance of all models
         print("\n📈 Model Performance Comparison:")
         print("-" * 40)
         print(results['test_results'][['model_name', 'auc', 'f1', 'accuracy']].to_string(index=False))
         
-        # 显示选择的特征
+        # Display selected features
         print(f"\n🔍 Top Features Selected by Mutual Information:")
         print("-" * 50)
         for i, feature in enumerate(results['selected_features']['MutualInfo'][:10], 1):

@@ -1,6 +1,6 @@
 """
 Pipeline Testing Script
-用于测试pipeline各个模块的基本功能
+Used to test the basic functionality of each module in the pipeline.
 """
 import sys
 import os
@@ -8,37 +8,37 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 
-# 添加当前目录到Python路径
+# Add the current directory to the Python path
 sys.path.append(str(Path(__file__).parent))
 
 def test_data_loader():
-    """测试数据加载模块"""
+    """Tests the data loading module"""
     print("Testing Data Loader...")
     try:
         from data_loader import DataLoader
         
         loader = DataLoader()
         
-        # 测试加载糖尿病数据
+        # Test loading diabetic data
         diabetic_data = loader.load_diabetic_data()
         assert isinstance(diabetic_data, pd.DataFrame)
         assert len(diabetic_data) > 0
         print("✅ Diabetic data loaded successfully")
         
-        # 测试加载ID映射数据
+        # Test loading ID mapping data
         ids_mapping = loader.load_ids_mapping()
         assert isinstance(ids_mapping, pd.DataFrame)
         assert len(ids_mapping) > 0
         print("✅ ID mapping data loaded successfully")
         
-        # 测试分割ID映射数据
+        # Test splitting ID mapping data
         admission_type, discharge_disposition, admission_source = loader.split_ids_mapping()
         assert len(admission_type) > 0
         assert len(discharge_disposition) > 0
         assert len(admission_source) > 0
         print("✅ ID mapping data split successfully")
         
-        # 测试合并数据
+        # Test merging data
         merged_data = loader.merge_data()
         assert isinstance(merged_data, pd.DataFrame)
         assert len(merged_data) > 0
@@ -51,30 +51,30 @@ def test_data_loader():
         return False
 
 def test_data_preprocessor():
-    """测试数据预处理模块"""
+    """Tests the data preprocessing module"""
     print("\nTesting Data Preprocessor...")
     try:
         from data_preprocessor import DataPreprocessor
         from data_loader import DataLoader
         
-        # 加载数据
+        # Load data
         loader = DataLoader()
         df = loader.merge_data()
         
-        # 初始化预处理器
+        # Initialize preprocessor
         preprocessor = DataPreprocessor()
         
-        # 测试特征工程
+        # Test feature engineering
         df_engineered = preprocessor.apply_feature_engineering(df)
         assert len(df_engineered.columns) > len(df.columns)
         print("✅ Feature engineering completed")
         
-        # 测试目标变量准备
+        # Test target variable preparation
         df_with_target = preprocessor.prepare_target_variable(df_engineered)
         assert 'readmitted_binary' in df_with_target.columns
         print("✅ Target variable prepared")
         
-        # 测试数据分割
+        # Test data splitting
         X_train, X_val, X_test, y_train, y_val, y_test = preprocessor.split_data(df_with_target)
         assert len(X_train) > 0
         assert len(X_val) > 0
@@ -88,14 +88,14 @@ def test_data_preprocessor():
         return False
 
 def test_feature_selector():
-    """测试特征选择模块"""
+    """Tests the feature selection module"""
     print("\nTesting Feature Selector...")
     try:
         from feature_selector import FeatureSelector
         from data_preprocessor import DataPreprocessor
         from data_loader import DataLoader
         
-        # 准备数据
+        # Prepare data
         loader = DataLoader()
         df = loader.merge_data()
         
@@ -108,20 +108,20 @@ def test_feature_selector():
         X_train, X_val, X_test = preprocessor.scale_numerical_features(X_train, X_val, X_test)
         X_train_balanced, y_train_balanced = preprocessor.apply_smote(X_train, y_train)
         
-        # 测试特征选择器
+        # Test feature selector
         selector = FeatureSelector()
         
-        # 测试L1特征选择
+        # Test L1 feature selection
         l1_features = selector.select_features_by_l1(X_train_balanced, y_train_balanced, top_n=5)
         assert len(l1_features) == 5
         print("✅ L1 feature selection completed")
         
-        # 测试互信息特征选择
+        # Test mutual information feature selection
         mi_features = selector.select_features_by_mi(X_train_balanced, y_train_balanced, top_n=5)
         assert len(mi_features) == 5
         print("✅ Mutual Information feature selection completed")
         
-        # 测试树模型特征选择
+        # Test tree-based feature selection
         tree_features = selector.select_features_by_tree(X_train_balanced, y_train_balanced, top_n=5)
         assert len(tree_features) == 5
         print("✅ Tree-based feature selection completed")
@@ -133,7 +133,7 @@ def test_feature_selector():
         return False
 
 def test_model_trainer():
-    """测试模型训练模块"""
+    """Tests the model training module"""
     print("\nTesting Model Trainer...")
     try:
         from model_trainer import ModelTrainer
@@ -141,7 +141,7 @@ def test_model_trainer():
         from data_preprocessor import DataPreprocessor
         from data_loader import DataLoader
         
-        # 准备数据
+        # Prepare data
         loader = DataLoader()
         df = loader.merge_data()
         
@@ -154,7 +154,7 @@ def test_model_trainer():
         X_train, X_val, X_test = preprocessor.scale_numerical_features(X_train, X_val, X_test)
         X_train_balanced, y_train_balanced = preprocessor.apply_smote(X_train, y_train)
         
-        # 特征选择
+        # Feature selection
         selector = FeatureSelector()
         selected_features = selector.select_all_features(X_train_balanced, y_train_balanced, top_n=10)
         best_features = selected_features['MutualInfo']
@@ -163,15 +163,15 @@ def test_model_trainer():
         X_val_selected = X_val[best_features]
         X_test_selected = X_test[best_features]
         
-        # 测试模型训练器
+        # Test model trainer
         trainer = ModelTrainer()
         
-        # 测试获取模型
+        # Test getting models
         models = trainer.get_models()
         assert len(models) > 0
         print("✅ Models initialized")
         
-        # 测试单个模型训练
+        # Test single model training
         result = trainer.train_single_model('RandomForest', X_train_selected, y_train_balanced, 
                                           X_val_selected, y_val)
         assert 'cv_auc' in result
@@ -185,17 +185,17 @@ def test_model_trainer():
         return False
 
 def test_main_pipeline():
-    """测试主pipeline"""
+    """Tests the main pipeline"""
     print("\nTesting Main Pipeline...")
     try:
         from main_pipeline import HospitalReadmissionPipeline
         
-        # 初始化pipeline
+        # Initialize pipeline
         pipeline = HospitalReadmissionPipeline()
         assert pipeline is not None
         print("✅ Pipeline initialized")
         
-        # 测试数据加载步骤
+        # Test data loading step
         raw_data = pipeline.run_data_loading()
         assert isinstance(raw_data, pd.DataFrame)
         assert len(raw_data) > 0
@@ -208,7 +208,7 @@ def test_main_pipeline():
         return False
 
 def main():
-    """运行所有测试"""
+    """Runs all tests"""
     print("🧪 Pipeline Testing Suite")
     print("=" * 40)
     

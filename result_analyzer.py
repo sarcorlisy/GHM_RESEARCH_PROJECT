@@ -79,14 +79,14 @@ class ResultAnalyzer:
             return
 
         analysis_df = pd.DataFrame(analysis_data)
-        print("\\n📊 特征分类详细映射表:")
+        print("\n📊 Detailed Feature Category Mapping Table:")
         with pd.option_context('display.max_rows', 20):
             display(analysis_df)
 
         # 2. Create the statistical summary
         stats_df = analysis_df.groupby(['Top N', 'Method', 'Category']).size().reset_index(name='Count')
         
-        print("\\n📈 各场景下特征类别的统计分布:")
+        print("\n📈 Statistical Distribution of Feature Categories per Scenario:")
         pivot_stats = stats_df.pivot_table(index=['Top N', 'Method'], columns='Category', values='Count', fill_value=0)
         display(pivot_stats)
 
@@ -104,7 +104,7 @@ class ResultAnalyzer:
             stats_df: The statistical summary DataFrame.
             save_path: Optional path to save the plot.
         """
-        print("\\n🎨 生成特征分类分布可视化图表:")
+        print("\n🎨 Generating Feature Category Distribution Visualization:")
         
         # Prepare data for stacked bar plot
         pivot_df = stats_df.pivot_table(
@@ -124,7 +124,7 @@ class ResultAnalyzer:
         if len(top_n_values) == 1:
             axes = [axes]
 
-        fig.suptitle('不同Top N值下, 各特征选择方法的分类分布', fontsize=16, y=1.0)
+        fig.suptitle('Category Distribution for Each Feature Selection Method by Top N', fontsize=16, y=1.0)
 
         for i, top_n in enumerate(top_n_values):
             ax = axes[i]
@@ -132,11 +132,11 @@ class ResultAnalyzer:
             data_subset.plot(kind='bar', stacked=True, ax=ax, colormap='viridis', width=0.8)
             
             ax.set_title(f'Top N = {top_n}')
-            ax.set_ylabel('特征数量')
+            ax.set_ylabel('Number of Features')
             ax.tick_params(axis='x', rotation=0)
-            ax.legend(title='特征主分类', bbox_to_anchor=(1.02, 1), loc='upper left')
+            ax.legend(title='Feature Category', bbox_to_anchor=(1.02, 1), loc='upper left')
 
-        plt.xlabel('特征选择方法')
+        plt.xlabel('Feature Selection Method')
         plt.tight_layout(rect=[0, 0, 0.85, 0.96])
         
         if save_path:

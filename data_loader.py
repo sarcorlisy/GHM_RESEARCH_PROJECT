@@ -9,19 +9,19 @@ from typing import Dict, Tuple, Optional
 
 from pipeline_config import DATA_PATHS
 
-# 设置日志
+# Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class DataLoader:
-    """数据加载器类，负责读取和预处理原始数据"""
+    """Data loader class, responsible for reading and preprocessing raw data"""
     
     def __init__(self, data_paths: Dict[str, Path] = None):
         """
-        初始化数据加载器
+        Initializes the data loader
         
         Args:
-            data_paths: 数据文件路径字典
+            data_paths: Dictionary of data file paths
         """
         self.data_paths = data_paths or DATA_PATHS
         self.diabetic_data = None
@@ -30,10 +30,10 @@ class DataLoader:
         
     def load_diabetic_data(self) -> pd.DataFrame:
         """
-        加载糖尿病数据集
+        Loads the diabetic dataset
         
         Returns:
-            糖尿病数据DataFrame
+            Diabetic data as a DataFrame
         """
         logger.info("Loading diabetic data...")
         try:
@@ -46,10 +46,10 @@ class DataLoader:
     
     def load_ids_mapping(self) -> pd.DataFrame:
         """
-        加载ID映射数据
+        Loads the ID mapping data
         
         Returns:
-            ID映射数据DataFrame
+            ID mapping data as a DataFrame
         """
         logger.info("Loading ID mapping data...")
         try:
@@ -62,25 +62,25 @@ class DataLoader:
     
     def split_ids_mapping(self) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
-        将ID映射数据分割为三个独立的映射表
+        Splits the ID mapping data into three separate mapping tables
         
         Returns:
-            入院类型、出院处置、入院来源映射表
+            Tuple containing admission type, discharge disposition, and admission source mapping tables
         """
         if self.ids_mapping is None:
             self.load_ids_mapping()
         
-        # 根据已知的行索引分割数据
+        # Split data based on known row indices
         admission_type_df = self.ids_mapping.iloc[0:8].copy()
         discharge_disposition_df = self.ids_mapping.iloc[10:40].reset_index(drop=True).copy()
         admission_source_df = self.ids_mapping.iloc[42:].reset_index(drop=True).copy()
         
-        # 设置列名
+        # Set column names
         admission_type_df.columns = ['admission_type_id', 'admission_type_desc']
         discharge_disposition_df.columns = ['discharge_disposition_id', 'discharge_disposition_desc']
         admission_source_df.columns = ['admission_source_id', 'admission_source_desc']
         
-        # 转换ID列为整数类型
+        # Convert ID columns to integer type
         admission_type_df['admission_type_id'] = admission_type_df['admission_type_id'].astype(int)
         discharge_disposition_df['discharge_disposition_id'] = discharge_disposition_df['discharge_disposition_id'].astype(int)
         admission_source_df['admission_source_id'] = admission_source_df['admission_source_id'].astype(int)
@@ -90,25 +90,25 @@ class DataLoader:
     
     def merge_data(self) -> pd.DataFrame:
         """
-        合并所有数据表
+        Merges all data tables
         
         Returns:
-            合并后的完整数据集
+            The complete merged dataset
         """
         logger.info("Merging all data tables...")
         
         if self.diabetic_data is None:
             self.load_diabetic_data()
         
-        # 获取映射表
+        # Get mapping tables
         admission_type_df, discharge_disposition_df, admission_source_df = self.split_ids_mapping()
         
-        # 合并数据
+        # Merge data
         merged_df = self.diabetic_data.merge(admission_type_df, on='admission_type_id', how='left')
         merged_df = merged_df.merge(discharge_disposition_df, on='discharge_disposition_id', how='left')
         merged_df = merged_df.merge(admission_source_df, on='admission_source_id', how='left')
         
-        # 删除旧的ID列以避免冗余，但保留'discharge_disposition_id'用于后续处理
+        # Drop old ID columns to avoid redundancy, but keep 'discharge_disposition_id' for later processing
         cols_to_drop = ['admission_type_id', 'admission_source_id']
         merged_df = merged_df.drop(columns=cols_to_drop)
         
@@ -118,10 +118,10 @@ class DataLoader:
     
     def get_data_info(self) -> Dict:
         """
-        获取数据集基本信息
+        Gets basic information about the dataset
         
         Returns:
-            数据集信息字典
+            A dictionary of dataset information
         """
         if self.merged_data is None:
             self.merge_data()
@@ -138,13 +138,13 @@ class DataLoader:
     
     def save_merged_data(self, output_path: Optional[Path] = None) -> Path:
         """
-        保存合并后的数据
+        Saves the merged data
         
         Args:
-            output_path: 输出路径，如果为None则使用默认路径
+            output_path: Output path. If None, a default path is used.
             
         Returns:
-            保存的文件路径
+            The path to the saved file
         """
         if self.merged_data is None:
             self.merge_data()
@@ -157,13 +157,13 @@ class DataLoader:
         return output_path
 
 def main():
-    """主函数，用于测试数据加载功能"""
+    """Main function to test data loading functionality"""
     loader = DataLoader()
     
-    # 加载和合并数据
+    # Load and merge data
     merged_data = loader.merge_data()
     
-    # 获取数据信息
+    # Get data info
     info = loader.get_data_info()
     print(f"Dataset shape: {info['shape']}")
     print(f"Number of columns: {len(info['columns'])}")
@@ -172,7 +172,7 @@ def main():
         if missing > 0:
             print(f"  {col}: {missing:.2f}%")
     
-    # 保存合并后的数据
+    # Save merged data
     loader.save_merged_data()
     
     return merged_data

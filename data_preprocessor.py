@@ -13,29 +13,29 @@ import warnings
 
 from pipeline_config import ICD9_CATEGORIES, FEATURE_CATEGORIES
 
-# 设置日志
+# Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 warnings.filterwarnings("ignore")
 
 class DataPreprocessor:
-    """数据预处理器类，负责特征工程和数据清洗"""
+    """Data preprocessor class, responsible for feature engineering and data cleaning"""
     
     def __init__(self):
-        """初始化预处理器"""
+        """Initializes the preprocessor"""
         self.scaler = StandardScaler()
         self.label_encoders = {}
         self.feature_engineering_applied = False
         
     def icd9_to_nine_category(self, code: str) -> str:
         """
-        将ICD-9代码分类为9个主要类别
+        Classifies ICD-9 codes into 9 major categories
         
         Args:
-            code: ICD-9代码
+            code: The ICD-9 code
             
         Returns:
-            分类结果
+            The classification result
         """
         try:
             code = str(code).strip()
@@ -54,23 +54,23 @@ class DataPreprocessor:
     
     def create_age_features(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        创建年龄相关特征
+        Creates age-related features
         
         Args:
-            df: 输入数据框
+            df: The input DataFrame
             
         Returns:
-            添加年龄特征后的数据框
+            The DataFrame with added age features
         """
         logger.info("Creating age-related features...")
         
-        # 创建年龄中点
+        # Create age midpoint
         df['age_midpoint'] = df['age'].apply(lambda x: 
             int(x.replace('[', '').replace(')', '').split('-')[0]) + 
             int(x.replace('[', '').replace(')', '').split('-')[1]) // 2
         )
         
-        # 创建年龄组
+        # Create age group
         df['age_group'] = df['age'].apply(lambda x: 
             x.replace('[', '').replace(')', '')
         )
@@ -79,17 +79,17 @@ class DataPreprocessor:
     
     def create_diagnosis_features(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        创建诊断相关特征
+        Creates diagnosis-related features
         
         Args:
-            df: 输入数据框
+            df: The input DataFrame
             
         Returns:
-            添加诊断特征后的数据框
+            The DataFrame with added diagnosis features
         """
         logger.info("Creating diagnosis-related features...")
         
-        # 为每个诊断创建分类特征
+        # Create categorical features for each diagnosis
         for col in ['diag_1', 'diag_2', 'diag_3']:
             df[f"{col}_category"] = df[col].apply(self.icd9_to_nine_category)
         
@@ -97,17 +97,17 @@ class DataPreprocessor:
     
     def create_comorbidity_feature(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        创建合并症特征
+        Creates the comorbidity feature
         
         Args:
-            df: 输入数据框
+            df: The input DataFrame
             
         Returns:
-            添加合并症特征后的数据框
+            The DataFrame with the added comorbidity feature
         """
         logger.info("Creating comorbidity feature...")
         
-        # 计算合并症数量（基于诊断数量）
+        # Calculate comorbidity count (based on number of diagnoses)
         df['comorbidity'] = df['number_diagnoses'].apply(lambda x: 
             0 if x <= 1 else (1 if x <= 3 else 2)
         )
@@ -116,20 +116,20 @@ class DataPreprocessor:
     
     def create_encounter_features(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        创建就诊相关特征
+        Creates encounter-related features
         
         Args:
-            df: 输入数据框
+            df: The input DataFrame
             
         Returns:
-            添加就诊特征后的数据框
+            The DataFrame with added encounter features
         """
         logger.info("Creating encounter-related features...")
         
-        # 创建就诊索引
+        # Create encounter index
         df['encounter_index'] = df.groupby('patient_nbr').cumcount() + 1
         
-        # 创建滚动平均特征
+        # Create rolling average feature
         df['rolling_avg'] = df.groupby('patient_nbr')['time_in_hospital'].transform(
             lambda x: x.expanding().mean()
         )
@@ -138,26 +138,26 @@ class DataPreprocessor:
     
     def handle_missing_values(self, df: pd.DataFrame, drop_missing_threshold: float = 50.0) -> pd.DataFrame:
         """
-        根据原始notebook的标准处理缺失值。
+        Handles missing values according to the original notebook's standard.
 
-        - 首先，将所有'?'替换为NaN。
-        - 删除缺失率超过`drop_missing_threshold`%的列。
-        - 将指定列的剩余缺失值填充为'Unknown'。
+        - First, replaces all '?' with NaN.
+        - Drops columns with a missing rate exceeding `drop_missing_threshold`%.
+        - Fills remaining missing values in specified columns with 'Unknown'.
 
         Args:
-            df: 输入数据框。
-            drop_missing_threshold: 删除列的缺失率阈值（百分比）。
+            df: The input DataFrame.
+            drop_missing_threshold: The missing rate threshold for dropping columns (in percent).
 
         Returns:
-            处理缺失值后的数据框。
+            The DataFrame after handling missing values.
         """
         logger.info("Handling missing values based on notebook's standard...")
 
-        # 1. 将'?'替换为NaN
+        # 1. Replace '?' with NaN
         df = df.replace('?', np.nan)
         logger.info("Replaced '?' with NaN.")
 
-        # 2. 计算并删除高缺失率的列
+        # 2. Calculate and drop columns with high missing rates
         missing_percentage = (df.isnull().sum() / len(df)) * 100
         cols_to_drop = missing_percentage[missing_percentage > drop_missing_threshold].index
         if len(cols_to_drop) > 0:
@@ -166,14 +166,14 @@ class DataPreprocessor:
         else:
             logger.info(f"✅ No columns with >{drop_missing_threshold}% missing values to drop.")
 
-        # 3. 填充剩余的缺失值
+        # 3. Fill remaining missing values
         cols_to_fill = [
             'medical_specialty', 'payer_code', 'race',
             'diag_1', 'diag_2', 'diag_3',
             'admission_type_desc', 'discharge_disposition_desc', 'admission_source_desc'
         ]
         
-        # 筛选出数据框中实际存在的、需要填充的列
+        # Filter for columns that actually exist in the DataFrame and need filling
         existing_cols_to_fill = [col for col in cols_to_fill if col in df.columns and df[col].isnull().any()]
 
         if existing_cols_to_fill:
@@ -182,7 +182,7 @@ class DataPreprocessor:
         else:
             logger.info("✅ No missing values found in the specified columns to fill.")
 
-        # 最终检查
+        # Final check
         final_missing = df.isnull().sum().sum()
         if final_missing == 0:
             logger.info("✅ All missing values have been handled successfully.")
@@ -195,33 +195,33 @@ class DataPreprocessor:
     
     def apply_feature_engineering(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        应用特征工程
+        Applies feature engineering
         
         Args:
-            df: 输入数据框
+            df: The input DataFrame
             
         Returns:
-            特征工程后的数据框
+            The DataFrame after feature engineering
         """
         logger.info("Applying feature engineering...")
         
-        # 1. 保留每个患者的第一次入院记录
+        # 1. Keep only the first admission record for each patient
         logger.info(f"Original number of encounters: {len(df)}")
         df_sorted = df.sort_values(by='encounter_id')
         df = df_sorted.drop_duplicates(subset='patient_nbr', keep='first')
         logger.info(f"Encounters after keeping first admission: {len(df)}")
         
-        # 2. 移除去世或去临终关怀的患者
+        # 2. Remove patients who died or went to hospice
         hospice_or_death_ids = [11, 13, 14, 19, 20, 21]
         records_before_filter = len(df)
         df = df[~df['discharge_disposition_id'].isin(hospice_or_death_ids)]
         logger.info(f"Removed {records_before_filter - len(df)} records for hospice/death dispositions.")
         logger.info(f"Encounters after removing hospice/death: {len(df)}")
 
-        # 3. 处理缺失值
+        # 3. Handle missing values
         df = self.handle_missing_values(df)
         
-        # 4. 创建各种特征
+        # 4. Create various features
         df = self.create_age_features(df)
         df = self.create_diagnosis_features(df)
         df = self.create_comorbidity_feature(df)
@@ -234,17 +234,17 @@ class DataPreprocessor:
     
     def prepare_target_variable(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        准备目标变量
+        Prepares the target variable
         
         Args:
-            df: 输入数据框
+            df: The input DataFrame
             
         Returns:
-            处理目标变量后的数据框
+            The DataFrame after processing the target variable
         """
         logger.info("Preparing target variable...")
         
-        # 将目标变量转换为二进制（0: 未再入院, 1: 再入院）
+        # Convert the target variable to binary (0: not readmitted, 1: readmitted)
         df['readmitted_binary'] = (df['readmitted'] == '<30').astype(int)
         
         return df

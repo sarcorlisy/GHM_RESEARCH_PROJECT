@@ -13,29 +13,29 @@ from typing import Dict, List, Tuple, Callable
 import json
 from pathlib import Path
 
-# 设置日志
+# Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class FeatureSelector:
-    """特征选择器类，提供多种特征选择方法"""
+    """Feature selector class, providing various feature selection methods"""
     
     def __init__(self):
-        """初始化特征选择器"""
+        """Initializes the feature selector"""
         self.selected_features = {}
         self.feature_importance_scores = {}
         
     def select_features_by_l1(self, X: pd.DataFrame, y: pd.Series, top_n: int = 15) -> List[str]:
         """
-        使用L1正则化进行特征选择
+        Selects features using L1 regularization
         
         Args:
-            X: 特征矩阵
-            y: 目标变量
-            top_n: 选择的特征数量
+            X: Feature matrix
+            y: Target variable
+            top_n: Number of features to select
             
         Returns:
-            选择的特征列表
+            A list of selected features
         """
         logger.info(f"Selecting top {top_n} features using L1 regularization...")
         
@@ -53,15 +53,15 @@ class FeatureSelector:
     
     def select_features_by_mi(self, X: pd.DataFrame, y: pd.Series, top_n: int = 15) -> List[str]:
         """
-        使用互信息进行特征选择
+        Selects features using Mutual Information
         
         Args:
-            X: 特征矩阵
-            y: 目标变量
-            top_n: 选择的特征数量
+            X: Feature matrix
+            y: Target variable
+            top_n: Number of features to select
             
         Returns:
-            选择的特征列表
+            A list of selected features
         """
         logger.info(f"Selecting top {top_n} features using Mutual Information...")
         
@@ -76,15 +76,15 @@ class FeatureSelector:
     
     def select_features_by_tree(self, X: pd.DataFrame, y: pd.Series, top_n: int = 15) -> List[str]:
         """
-        使用树模型特征重要性进行特征选择
+        Selects features using tree-based feature importance
         
         Args:
-            X: 特征矩阵
-            y: 目标变量
-            top_n: 选择的特征数量
+            X: Feature matrix
+            y: Target variable
+            top_n: Number of features to select
             
         Returns:
-            选择的特征列表
+            A list of selected features
         """
         logger.info(f"Selecting top {top_n} features using Tree-based importance...")
         
@@ -102,10 +102,10 @@ class FeatureSelector:
     
     def get_feature_selectors(self) -> Dict[str, Callable]:
         """
-        获取所有特征选择方法
+        Gets all available feature selection methods
         
         Returns:
-            特征选择方法字典
+            A dictionary of feature selection methods
         """
         return {
             'L1': self.select_features_by_l1,
@@ -116,16 +116,16 @@ class FeatureSelector:
     def select_features_by_method(self, method: str, X: pd.DataFrame, y: pd.Series, 
                                  top_n: int = 15) -> List[str]:
         """
-        根据指定方法选择特征
+        Selects features based on a specified method
         
         Args:
-            method: 特征选择方法名称
-            X: 特征矩阵
-            y: 目标变量
-            top_n: 选择的特征数量
+            method: The name of the feature selection method
+            X: Feature matrix
+            y: Target variable
+            top_n: Number of features to select
             
         Returns:
-            选择的特征列表
+            A list of selected features
         """
         selectors = self.get_feature_selectors()
         
@@ -136,15 +136,15 @@ class FeatureSelector:
     
     def select_features_multiple_topn(self, X: pd.DataFrame, y: pd.Series, top_n_list: List[int]) -> Dict[int, Dict[str, List[str]]]:
         """
-        使用多个top_n值运行所有特征选择方法
+        Runs all feature selection methods with multiple top_n values
         
         Args:
-            X: 特征矩阵
-            y: 目标变量
-            top_n_list: top_n值列表，如[5, 10, 15]
+            X: Feature matrix
+            y: Target variable
+            top_n_list: A list of top_n values, e.g., [5, 10, 15]
             
         Returns:
-            嵌套字典，格式为 {top_n: {method: features}}
+            A nested dictionary in the format {top_n: {method: features}}
         """
         logger.info(f"Running feature selection with multiple top_n values: {top_n_list}")
         
@@ -159,15 +159,15 @@ class FeatureSelector:
     
     def select_all_features(self, X: pd.DataFrame, y: pd.Series, top_n: int = 15) -> Dict[str, List[str]]:
         """
-        使用所有方法选择特征
+        Selects features using all available methods
         
         Args:
-            X: 特征矩阵
-            y: 目标变量
-            top_n: 选择的特征数量
+            X: Feature matrix
+            y: Target variable
+            top_n: Number of features to select
             
         Returns:
-            每种方法选择的特征字典
+            A dictionary of features selected by each method
         """
         logger.info(f"Running all feature selection methods with top_n={top_n}...")
         
@@ -187,25 +187,25 @@ class FeatureSelector:
     
     def get_common_features(self, min_methods: int = 2) -> List[str]:
         """
-        获取被多个方法共同选择的特征
+        Gets features that are commonly selected by multiple methods
         
         Args:
-            min_methods: 最少被选择的方法数量
+            min_methods: The minimum number of methods a feature must be selected by
             
         Returns:
-            共同特征列表
+            A list of common features
         """
         if not self.selected_features:
             logger.warning("No features have been selected yet. Run select_all_features first.")
             return []
         
-        # 统计每个特征被选择的方法数量
+        # Count the number of methods that selected each feature
         feature_counts = {}
         for method, features in self.selected_features.items():
             for feature in features:
                 feature_counts[feature] = feature_counts.get(feature, 0) + 1
         
-        # 筛选被多个方法选择的特征
+        # Filter features selected by multiple methods
         common_features = [feature for feature, count in feature_counts.items() if count >= min_methods]
         
         logger.info(f"Found {len(common_features)} features selected by at least {min_methods} methods")
@@ -213,13 +213,13 @@ class FeatureSelector:
     
     def save_selected_features(self, output_path: str = None) -> str:
         """
-        保存选择的特征到JSON文件
+        Saves the selected features to a JSON file
         
         Args:
-            output_path: 输出文件路径
+            output_path: The output file path
             
         Returns:
-            保存的文件路径
+            The path to the saved file
         """
         if not self.selected_features:
             logger.warning("No features have been selected yet.")
@@ -228,7 +228,7 @@ class FeatureSelector:
         if output_path is None:
             output_path = f"outputs/selected_features_top{len(list(self.selected_features.values())[0])}.json"
         
-        # 确保输出目录存在
+        # Ensure the output directory exists
         Path(output_path).parent.mkdir(parents=True, exist_ok=True)
         
         with open(output_path, "w") as f:
@@ -239,13 +239,13 @@ class FeatureSelector:
     
     def load_selected_features(self, file_path: str) -> Dict[str, List[str]]:
         """
-        从JSON文件加载选择的特征
+        Loads selected features from a JSON file
         
         Args:
-            file_path: 文件路径
+            file_path: The file path
             
         Returns:
-            选择的特征字典
+            A dictionary of selected features
         """
         with open(file_path, "r") as f:
             self.selected_features = json.load(f)
@@ -255,16 +255,16 @@ class FeatureSelector:
     
     def get_feature_importance_summary(self) -> pd.DataFrame:
         """
-        获取特征重要性摘要
+        Gets feature importance summary
         
         Returns:
-            特征重要性摘要DataFrame
+            Feature importance summary DataFrame
         """
         if not self.feature_importance_scores:
             logger.warning("No feature importance scores available.")
             return pd.DataFrame()
         
-        # 创建特征重要性摘要
+        # Create feature importance summary
         summary_data = []
         for method, scores in self.feature_importance_scores.items():
             for feature, score in scores.items():
@@ -280,12 +280,12 @@ class FeatureSelector:
     def plot_feature_importance(self, method: str = None, top_n: int = 10, 
                               save_path: str = None) -> None:
         """
-        绘制特征重要性图
+        Plots feature importance
         
         Args:
-            method: 特征选择方法，如果为None则绘制所有方法
-            top_n: 显示前N个特征
-            save_path: 保存路径
+            method: Feature selection method, if None plots all methods
+            top_n: Display top N features
+            save_path: Save path
         """
         import matplotlib.pyplot as plt
         
@@ -307,7 +307,7 @@ class FeatureSelector:
             plt.gca().invert_yaxis()
             
         else:
-            # 绘制所有方法
+            # Plot all methods
             fig, axes = plt.subplots(1, len(self.feature_importance_scores), 
                                    figsize=(5*len(self.feature_importance_scores), 6))
             
@@ -335,10 +335,10 @@ class FeatureSelector:
 
     def display_multiple_topn_results(self, multiple_results: Dict[int, Dict[str, List[str]]]) -> None:
         """
-        以表格形式显示多个top_n值的结果
+        Displays multiple top_n results in table format
 
         Args:
-            multiple_results: select_features_multiple_topn的返回结果
+            multiple_results: Return result of select_features_multiple_topn
         """
         try:
             from IPython.display import display
@@ -347,7 +347,7 @@ class FeatureSelector:
             logger.warning("IPython or pandas not found. Displaying as plain text.")
             display = print
 
-        # 创建详细结果表格
+        # Create detailed result table
         table_data = []
         for top_n, results_for_top_n in multiple_results.items():
             for method, features in results_for_top_n.items():
@@ -359,17 +359,17 @@ class FeatureSelector:
         
         results_df = pd.DataFrame(table_data)
         
-        print("\n📊 多个Top N值特征选择详细结果:")
+        print("\n📊 Multiple Top N Value Feature Selection Detailed Results:")
         with pd.option_context('display.max_colwidth', 100):
             display(results_df)
         
-        # 创建共同特征总结表格
+        # Create common feature summary table
         common_features_data = []
         methods = list(multiple_results.get(list(multiple_results.keys())[0], {}).keys())
         num_methods = len(methods)
 
         for top_n, results_for_top_n in multiple_results.items():
-            # 临时设置当前结果以使用get_common_features
+            # Temporarily set current result to use get_common_features
             self.selected_features = results_for_top_n
             common_feats_2 = self.get_common_features(min_methods=2)
             common_feats_all = self.get_common_features(min_methods=num_methods)
@@ -382,17 +382,17 @@ class FeatureSelector:
         
         common_features_df = pd.DataFrame(common_features_data)
         
-        print("\n🔍 各Top N值下的共同特征总结:")
+        print("\n🔍 Common Features Summary by Top N Value:")
         with pd.option_context('display.max_colwidth', 100):
             display(common_features_df)
 
     def plot_feature_selection_matrix(self, multiple_results: Dict[int, Dict[str, List[str]]], save_path: str = None) -> None:
         """
-        以矩阵热力图的形式可视化特征选择结果
+        Plots feature selection results in matrix heatmap format
 
         Args:
-            multiple_results: 来自 select_features_multiple_topn 的结果
-            save_path: 图片保存路径
+            multiple_results: Return result of select_features_multiple_topn
+            save_path: Image save path
         """
         try:
             import matplotlib.pyplot as plt
@@ -403,7 +403,7 @@ class FeatureSelector:
             logger.warning("matplotlib or seaborn not found. Skipping plotting.")
             return
             
-        print("\n🎨 生成特征选择矩阵可视化图表:")
+        print("\n🎨 Generating Feature Selection Matrix Visualization Chart:")
         
         top_n_values = sorted(multiple_results.keys())
         num_top_n = len(top_n_values)
@@ -412,12 +412,12 @@ class FeatureSelector:
         if num_top_n == 1:
             axes = [axes]
 
-        fig.suptitle('不同Top N值下的特征选择矩阵', fontsize=16, y=1.02)
+        fig.suptitle('Feature Selection Matrix by Different Top N Values', fontsize=16, y=1.02)
 
         for i, top_n in enumerate(top_n_values):
             results_for_top_n = multiple_results[top_n]
             
-            # 获取当前 top_n 下所有被选中的特征
+            # Get all selected features in current top_n
             all_selected_features = sorted(list(set(feat for feats in results_for_top_n.values() for feat in feats)))
             
             if not all_selected_features:
@@ -425,6 +425,7 @@ class FeatureSelector:
                 axes[i].set_title(f'Top N = {top_n}')
                 continue
 
+            # Build 0/1 matrix
             # 构建0/1矩阵
             selection_matrix = pd.DataFrame(index=all_selected_features)
             for method, features in results_for_top_n.items():

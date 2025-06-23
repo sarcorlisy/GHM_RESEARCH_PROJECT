@@ -4,10 +4,10 @@ Hospital Readmission Prediction Pipeline Configuration
 import os
 from pathlib import Path
 
-# 项目根目录
+# Project Root Directory
 PROJECT_ROOT = Path(__file__).parent
 
-# 数据文件路径
+# Data File Paths
 DATA_PATHS = {
     'diabetic_data': PROJECT_ROOT / 'diabetic_data.csv',
     'ids_mapping': PROJECT_ROOT / 'IDS_mapping.csv',
@@ -15,10 +15,10 @@ DATA_PATHS = {
     'output_dir': PROJECT_ROOT / 'outputs'
 }
 
-# 创建输出目录
+# Create output directory
 DATA_PATHS['output_dir'].mkdir(exist_ok=True)
 
-# 模型配置
+# Model Configuration
 MODEL_CONFIG = {
     'test_size': 0.2,
     'val_size': 0.2,
@@ -27,21 +27,21 @@ MODEL_CONFIG = {
     'feature_selection_top_n': 15
 }
 
-# 特征选择方法
+# Feature Selection Methods
 FEATURE_SELECTION_METHODS = {
     'L1': 'Logistic Regression with L1 penalty',
     'MutualInfo': 'Mutual Information',
     'TreeImportance': 'Random Forest Feature Importance'
 }
 
-# 模型类型
+# Model Types
 MODELS = {
     'LogisticRegression': 'Logistic Regression',
     'RandomForest': 'Random Forest',
     'XGBoost': 'XGBoost'
 }
 
-# 特征分类定义
+# Feature Category Definitions
 FEATURE_CATEGORIES = {
     "Demographic": [
         'race', 'gender', 'age', 'age_midpoint', 'age_group'
@@ -70,7 +70,7 @@ FEATURE_CATEGORIES = {
     "Label": ['readmitted']
 }
 
-# ICD-9 分类映射
+# ICD-9 Category Mapping
 ICD9_CATEGORIES = {
     'circulatory': (390, 459),
     'respiratory': (460, 519),
@@ -82,7 +82,7 @@ ICD9_CATEGORIES = {
     'neoplasms': (140, 239)
 }
 
-# 可视化配置
+# Visualization Configuration
 PLOT_CONFIG = {
     'figsize': (12, 8),
     'dpi': 300,
