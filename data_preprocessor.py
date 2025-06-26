@@ -230,23 +230,51 @@ class DataPreprocessor:
         self.feature_engineering_applied = True
         logger.info("Feature engineering completed")
         
+        # 在特征工程最后一步直接剔除rolling_avg，确保后续df不再包含该特征
+        if 'rolling_avg' in df.columns:
+            df = df.drop(columns=['rolling_avg'])
+        
         return df
     
-    def prepare_target_variable(self, df: pd.DataFrame) -> pd.DataFrame:
+    def prepare_target_variable(self, df: pd.DataFrame, target_type: str = 'binary') -> pd.DataFrame:
         """
-        Prepares the target variable
+        Prepares the target variable with different encoding options
         
         Args:
             df: The input DataFrame
+            target_type: Target variable type ('binary', 'multiclass', or 'risk_level')
             
         Returns:
             The DataFrame after processing the target variable
         """
-        logger.info("Preparing target variable...")
+        logger.info(f"Preparing target variable with {target_type} encoding...")
         
-        # Convert the target variable to binary (0: not readmitted, 1: readmitted)
-        df['readmitted_binary'] = (df['readmitted'] == '<30').astype(int)
-        
+        if target_type == 'binary':
+            # Binary classification: focus on <30 days readmission (most critical)
+            # Both 'NO' and '>30' are considered safe (0), only '<30' is high risk (1)
+            df['readmitted_binary'] = (df['readmitted'] == '<30').astype(int)
+            logger.info("Binary target: 0=Safe (No readmission or >30 days), 1=High risk (<30 days readmission)")
+            
+        elif target_type == 'multiclass':
+            # Multi-class classification with semantic encoding
+            readmission_mapping = {
+                'NO': 0,      # No readmission (baseline)
+                '>30': 1,     # Readmitted after 30 days (less critical)
+                '<30': 2      # Readmitted within 30 days (most critical)
+            }
+            df['readmitted_multiclass'] = df['readmitted'].map(readmission_mapping)
+            logger.info("Multi-class target: 0=No readmission, 1=>30 days, 2=<30 days")
+            
+        elif target_type == 'risk_level':
+            # Risk-based encoding (alternative approach)
+            risk_mapping = {
+                'NO': 0,      # No risk (no readmission)
+                '>30': 1,     # Low risk (readmitted after 30 days)
+                '<30': 3      # High risk (readmitted within 30 days)
+            }
+            df['readmitted_risk'] = df['readmitted'].map(risk_mapping)
+            logger.info("Risk-based target: 0=No risk, 1=Low risk, 3=High risk")
+            
         return df
     
     def split_data(self, df: pd.DataFrame, target_col: str = 'readmitted_binary',
@@ -299,7 +327,7 @@ class DataPreprocessor:
         return X_train, X_val, X_test, y_train, y_val, y_test
     
     def encode_categorical_features(self, X_train: pd.DataFrame, X_val: pd.DataFrame, 
-                                  X_test: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+                                  X_test: pd.DataFrame, encoding_method: str = 'label') -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
         编码分类特征
         
@@ -307,20 +335,48 @@ class DataPreprocessor:
             X_train: 训练集特征
             X_val: 验证集特征
             X_test: 测试集特征
+            encoding_method: 编码方法 ('label' 或 'onehot')
             
         Returns:
             编码后的特征集
         """
-        logger.info("Encoding categorical features...")
+        logger.info(f"Encoding categorical features using {encoding_method} encoding...")
         
         categorical_features = X_train.select_dtypes(include=['object']).columns
         
-        for col in categorical_features:
-            le = LabelEncoder()
-            X_train[col] = le.fit_transform(X_train[col])
-            X_val[col] = X_val[col].map(lambda s: le.transform([s])[0] if s in le.classes_ else -1)
-            X_test[col] = X_test[col].map(lambda s: le.transform([s])[0] if s in le.classes_ else -1)
-            self.label_encoders[col] = le
+        if encoding_method == 'label':
+            # Label Encoding (适合树模型)
+            for col in categorical_features:
+                le = LabelEncoder()
+                X_train[col] = le.fit_transform(X_train[col])
+                X_val[col] = X_val[col].map(lambda s: le.transform([s])[0] if s in le.classes_ else -1)
+                X_test[col] = X_test[col].map(lambda s: le.transform([s])[0] if s in le.classes_ else -1)
+                self.label_encoders[col] = le
+                
+        elif encoding_method == 'onehot':
+            # One-Hot Encoding (适合线性模型)
+            from sklearn.preprocessing import OneHotEncoder
+            ohe = OneHotEncoder(sparse_output=False, handle_unknown='ignore')
+            
+            # 对训练集进行One-Hot编码
+            train_encoded = ohe.fit_transform(X_train[categorical_features])
+            val_encoded = ohe.transform(X_val[categorical_features])
+            test_encoded = ohe.transform(X_test[categorical_features])
+            
+            # 创建新的列名
+            feature_names = ohe.get_feature_names_out(categorical_features)
+            
+            # 删除原始分类列
+            X_train = X_train.drop(columns=categorical_features)
+            X_val = X_val.drop(columns=categorical_features)
+            X_test = X_test.drop(columns=categorical_features)
+            
+            # 添加编码后的列
+            X_train = pd.concat([X_train, pd.DataFrame(train_encoded, columns=feature_names, index=X_train.index)], axis=1)
+            X_val = pd.concat([X_val, pd.DataFrame(val_encoded, columns=feature_names, index=X_val.index)], axis=1)
+            X_test = pd.concat([X_test, pd.DataFrame(test_encoded, columns=feature_names, index=X_test.index)], axis=1)
+            
+            self.onehot_encoder = ohe
         
         return X_train, X_val, X_test
     

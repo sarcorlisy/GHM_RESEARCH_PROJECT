@@ -243,13 +243,11 @@ class ModelTrainer:
             logger.warning("matplotlib or seaborn not found. Skipping plotting.")
             return
 
-        # Set Chinese font
         plt.rcParams['font.sans-serif'] = ['SimHei', 'Arial Unicode MS']
         plt.rcParams['axes.unicode_minus'] = False
 
         print(f"\n🎨 Generating performance visualization chart based on '{metric}':")
 
-        # Use catplot to easily create bar charts grouped by top_n
         g = sns.catplot(
             data=results_df,
             x='model_name',
@@ -263,13 +261,11 @@ class ModelTrainer:
             legend=False
         )
         
-        # Add titles and labels
         g.fig.suptitle(f'Model Performance Comparison by {metric}', y=1.03, size=16)
         g.set_axis_labels("Model", f"Cross-validated {metric}")
         g.set_titles("Top {col_name} Features")
         g.despine(left=True)
         
-        # Add value labels to each bar
         for ax in g.axes.flat:
             for p in ax.patches:
                 ax.annotate(f'{p.get_height():.3f}',
@@ -278,9 +274,8 @@ class ModelTrainer:
                             xytext=(0, 9),
                             textcoords='offset points',
                             fontsize=9)
-            ax.tick_params(axis='x', rotation=30)
+            ax.tick_params(axis='x', rotation=45)
 
-        # Add legend
         plt.legend(title='Feature Selection Method', bbox_to_anchor=(1.05, 1), loc='upper left')
         
         plt.tight_layout(rect=[0, 0, 0.9, 0.96])
@@ -301,7 +296,6 @@ class ModelTrainer:
             
         print("\n📈 Generating trend chart of model performance vs. number of features:")
 
-        # Plot for both core metrics (AUC and F1)
         for metric in ['cv_auc', 'cv_f1']:
             plt.figure(figsize=(14, 8))
             
@@ -320,9 +314,9 @@ class ModelTrainer:
             plt.ylabel(f'Cross-validated {metric}')
             plt.grid(True, which='both', linestyle='--', linewidth=0.5)
             plt.legend(title='Model & FS Method')
+            plt.xticks(rotation=45)
             
             if save_path:
-                # Append metric name to the save path to avoid overwriting
                 path_obj = Path(save_path)
                 new_path = path_obj.with_name(f"{path_obj.stem}_{metric}{path_obj.suffix}")
                 plt.savefig(new_path, dpi=300, bbox_inches='tight')
@@ -373,7 +367,7 @@ class ModelTrainer:
     def _plot_confusion_matrix(self, y_true, y_pred, ax):
         """Helper to plot confusion matrix."""
         cm = confusion_matrix(y_true, y_pred)
-        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', ax=ax)
+        sns.heatmap(cm, annot=True, fmt='.2f', cmap='Blues', ax=ax)
         ax.set_title('Confusion Matrix')
         ax.set_xlabel('Predicted Label')
         ax.set_ylabel('True Label')
@@ -545,30 +539,35 @@ class ModelTrainer:
         Args:
             save_path: Path to save the plot
         """
-        if not self.test_results:
-            logger.warning("No test results available for plotting.")
+        if not self.cv_results or not self.test_results:
+            logger.warning("CV or test results not available for plotting comparison.")
             return
-        
-        metrics = ['accuracy', 'precision', 'recall', 'f1', 'auc']
-        models = list(self.test_results.keys())
-        
-        fig, axes = plt.subplots(1, len(metrics), figsize=(15, 4))
-        
-        for i, metric in enumerate(metrics):
-            values = [self.test_results[model][metric] for model in models]
+
+        if not _PLOTTING_ENABLED:
+            logger.warning("matplotlib or seaborn not found. Skipping plotting.")
+            return
             
-            axes[i].bar(models, values)
-            axes[i].set_title(f'{metric.upper()}')
-            axes[i].set_ylabel('Score')
-            axes[i].tick_params(axis='x', rotation=45)
-            
-            # Add value labels
-            for j, v in enumerate(values):
-                axes[i].text(j, v + 0.01, f'{v:.3f}', ha='center', va='bottom')
+        cv_melt = self.cv_results.melt(id_vars='model_name', var_name='metric', value_name='score')
+        cv_melt['type'] = 'Cross-validation'
         
+        test_melt = self.test_results.melt(id_vars='model_name', var_name='metric', value_name='score')
+        test_melt['type'] = 'Test Set'
+        
+        combined_results = pd.concat([cv_melt, test_melt])
+        
+        plt.figure(figsize=(14, 8))
+        sns.barplot(data=combined_results, x='metric', y='score', hue='model_name')
+        plt.title('Model Performance Comparison: CV vs. Test Set')
+        plt.ylabel('Score')
+        plt.xlabel('Metric')
+        plt.xticks(rotation=45)
+        plt.legend(title='Model')
         plt.tight_layout()
-        plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        logger.info(f"Model comparison plot saved to: {save_path}")
+        
+        if save_path:
+            plt.savefig(save_path, dpi=300)
+            logger.info(f"Model comparison plot saved to {save_path}")
+            
         plt.show()
 
 def main():

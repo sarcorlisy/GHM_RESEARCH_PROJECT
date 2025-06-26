@@ -305,7 +305,7 @@ class FeatureSelector:
             plt.xlabel('Importance Score')
             plt.title(f'Top {top_n} Features by {method}')
             plt.gca().invert_yaxis()
-            
+            # No x-ticks for barh
         else:
             # Plot all methods
             fig, axes = plt.subplots(1, len(self.feature_importance_scores), 
@@ -416,36 +416,20 @@ class FeatureSelector:
 
         for i, top_n in enumerate(top_n_values):
             results_for_top_n = multiple_results[top_n]
-            
-            # Get all selected features in current top_n
             all_selected_features = sorted(list(set(feat for feats in results_for_top_n.values() for feat in feats)))
-            
-            if not all_selected_features:
-                axes[i].text(0.5, 0.5, 'No features selected', ha='center', va='center')
-                axes[i].set_title(f'Top N = {top_n}')
-                continue
-
-            # Build 0/1 matrix
-            # 构建0/1矩阵
             selection_matrix = pd.DataFrame(index=all_selected_features)
             for method, features in results_for_top_n.items():
-                selection_matrix[method] = selection_matrix.index.isin(features).astype(int)
-            
-            # 绘制热力图
-            sns.heatmap(selection_matrix, ax=axes[i], annot=True, cmap="YlGnBu", cbar=False, linewidths=.5)
+                selection_matrix[method] = [1 if f in features else 0 for f in all_selected_features]
+            sns.heatmap(selection_matrix, ax=axes[i], cmap='Blues', cbar=False, annot=True, fmt='.0f')
             axes[i].set_title(f'Top N = {top_n}')
-            axes[i].set_xlabel('特征选择方法')
-            if i == 0:
-                axes[i].set_ylabel('特征名称')
-            else:
-                axes[i].set_ylabel('')
-
-        plt.tight_layout(rect=[0, 0, 1, 0.96])
-
+            axes[i].set_xlabel('Method')
+            axes[i].set_ylabel('Feature')
+            axes[i].set_xticklabels(axes[i].get_xticklabels(), rotation=45)
+            axes[i].set_yticklabels(axes[i].get_yticklabels(), rotation=0)
+        plt.tight_layout()
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
             logger.info(f"Feature selection matrix plot saved to: {save_path}")
-
         plt.show()
 
 def main():

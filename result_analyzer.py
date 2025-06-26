@@ -106,14 +106,12 @@ class ResultAnalyzer:
         """
         print("\n🎨 Generating Feature Category Distribution Visualization:")
         
-        # Prepare data for stacked bar plot
         pivot_df = stats_df.pivot_table(
             index=['Top N', 'Method'], 
             columns='Category', 
             values='Count'
         ).fillna(0)
         
-        # We need to plot each 'Top N' value as a separate subplot
         top_n_values = sorted(stats_df['Top N'].unique())
         
         fig, axes = plt.subplots(
@@ -130,10 +128,9 @@ class ResultAnalyzer:
             ax = axes[i]
             data_subset = pivot_df.loc[top_n]
             data_subset.plot(kind='bar', stacked=True, ax=ax, colormap='viridis', width=0.8)
-            
             ax.set_title(f'Top N = {top_n}')
             ax.set_ylabel('Number of Features')
-            ax.tick_params(axis='x', rotation=0)
+            ax.tick_params(axis='x', rotation=45)
             ax.legend(title='Feature Category', bbox_to_anchor=(1.02, 1), loc='upper left')
 
         plt.xlabel('Feature Selection Method')
