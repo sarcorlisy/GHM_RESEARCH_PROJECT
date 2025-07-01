@@ -375,34 +375,46 @@ class EDAAnalyzer:
 
     def plot_readmission_rate_by_age_gender(self, age_col='age', gender_col='gender', readmission_col='readmitted'):
         """
-        统计并可视化不同age_group和gender下Early Readmission和No Early Readmission（NO+>30）再入院率的分布，分母为所有患者。
-        返回百分比DataFrame。
+        绘制不同年龄组和性别下的再入院率分组柱状图，横轴为age_group，每组内按gender分组显示Early/No Early Readmission。
+        如果age_group列不存在，自动尝试用age分箱生成。
         """
+        df = self.df.copy()
+        # 自动生成age_group
+        if 'age_group' not in df.columns:
+            bins = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+            labels = ['0-10', '10-20', '20-30', '30-40', '40-50', '50-60', '60-70', '70-80', '80-90', '90-100']
+            df['age_group'] = pd.cut(df[age_col], bins=bins, labels=labels, right=False)
+        else:
+            df['age_group'] = self.df['age_group']
+        # 创建分组
+        temp_col = 'readmit_bin'
+        df[temp_col] = df[readmission_col].apply(lambda x: 'Early Readmission Rate (%)' if x == '<30' else 'No Early Readmission Rate (%)')
+        # 计算百分比
+        summary = df.groupby(['age_group', gender_col])[temp_col].value_counts(normalize=True).unstack(fill_value=0) * 100
+        summary = summary.reset_index()
+        melted = summary.melt(id_vars=['age_group', gender_col], var_name='readmitted', value_name='percentage')
+        # 分组柱状图
         import matplotlib.pyplot as plt
         import seaborn as sns
-        self.df['age_group'] = self.df[age_col].str.extract(r'(\d+-\d+)')
-        # 合并NO和>30为No Early Readmission
-        self.df['readmit_bin'] = self.df[readmission_col].apply(lambda x: 'Early Readmission' if x == '<30' else 'No Early Readmission')
-        summary = self.df.groupby(['age_group', gender_col])['readmit_bin'].value_counts().unstack(fill_value=0)
-        summary['Total'] = summary.sum(axis=1)
-        summary['Early Readmission Rate (%)'] = summary.get('Early Readmission', 0) / summary['Total'] * 100
-        summary['No Early Readmission Rate (%)'] = summary.get('No Early Readmission', 0) / summary['Total'] * 100
-        print("Readmission rate by age group and gender (%):")
-        print(summary[['Early Readmission Rate (%)', 'No Early Readmission Rate (%)']])
-        summary = summary.reset_index()
-        # 变形用于barplot
-        readmission_percentage_melted = summary.melt(id_vars=['age_group', gender_col], value_vars=['Early Readmission Rate (%)', 'No Early Readmission Rate (%)'], var_name='readmitted', value_name='percentage')
-        plt.figure(figsize=(14, 8))
-        sns.barplot(x='age_group', y='percentage', hue='readmitted', data=readmission_percentage_melted, palette='Set2')
-        plt.title('Early vs No Early Readmission Rate by Age Group and Gender')
-        plt.xlabel('Age Group')
-        plt.ylabel('Readmission Rate (%)')
-        plt.xticks(rotation=45)
+        plt.figure(figsize=(14, 7))
+        sns.barplot(
+            x='age_group',
+            y='percentage',
+            hue=gender_col,
+            data=melted[melted['readmitted'] == 'Early Readmission Rate (%)'],
+            palette='Set2',
+            dodge=True
+        )
+        plt.title('Early Readmission Rate by Age Group and Gender', fontsize=15)
+        plt.xlabel('Age Group', fontsize=12)
+        plt.ylabel('Early Readmission Rate (%)', fontsize=12)
+        plt.legend(title='Gender')
         plt.tight_layout()
         plt.show()
-        if 'readmit_bin' in self.df.columns:
-            self.df.drop(columns=['readmit_bin'], inplace=True)
-        return summary[['age_group', gender_col, 'Early Readmission Rate (%)', 'No Early Readmission Rate (%)']]
+        # 清理临时列
+        if temp_col in df.columns:
+            df.drop(columns=[temp_col], inplace=True)
+        return summary
 
     def plot_readmission_rate_heatmap_by_age_gender(self, age_col='age', gender_col='gender', readmission_col='readmitted'):
         """

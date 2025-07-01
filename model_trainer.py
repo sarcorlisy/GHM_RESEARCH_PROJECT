@@ -18,8 +18,9 @@ from pathlib import Path
 import warnings
 import matplotlib.pyplot as plt
 import seaborn as sns
+import os
 
-from pipeline_config import MODEL_CONFIG, MODELS
+from pipeline_config import MODEL_CONFIG, MODELS, FEATURE_CATEGORIES
 
 # Global plotting switch, checks if plotting libraries are available
 try:
@@ -94,53 +95,63 @@ class ModelTrainer:
         
         return np.mean(auc_scores), np.mean(f1_scores)
     
-    def train_single_model(self, model_name: str, X_train: pd.DataFrame, y_train: pd.Series) -> Dict[str, Any]:
+    def train_single_model(self, model_name: str, X_train: pd.DataFrame, y_train: pd.Series,
+                          X_test: pd.DataFrame = None, y_test: pd.Series = None,
+                          feature_method: str = None) -> Dict[str, Any]:
         """
         Trains a single model.
         """
         logger.info(f"Training {model_name}...")
-        
         models = self.get_models()
         if model_name not in models:
             raise ValueError(f"Unknown model: {model_name}. Available models: {list(models.keys())}")
-        
         model = models[model_name]
-        
-        # Train directly on the provided data
         model.fit(X_train, y_train)
-        
-        # Perform cross-validation on the same data
         auc_cv, f1_cv = self.evaluate_model_with_cv(model, X_train, y_train, 
                                                    cv_folds=MODEL_CONFIG['cv_folds'])
-        
         results = {
             'model_name': model_name,
             'cv_auc': auc_cv,
             'cv_f1': f1_cv
         }
-        
         logger.info(f"{model_name} training completed - CV AUC: {auc_cv:.3f}, CV F1: {f1_cv:.3f}")
+        # 新增：如果有测试集，画概率分布图
+        if X_test is not None:
+            try:
+                y_pred_proba = model.predict_proba(X_test)[:, 1]
+                os.makedirs('outputs', exist_ok=True)
+                plt.figure(figsize=(6,4))
+                plt.hist(y_pred_proba, bins=50)
+                plt.xlabel('Predicted Probability for Positive Class')
+                plt.ylabel('Count')
+                plt.title(f'Predicted Probability Distribution\n{model_name} {feature_method or ""}')
+                plt.tight_layout()
+                fname = f'outputs/proba_hist_{model_name}_{feature_method or "default"}.png'
+                plt.savefig(fname)
+                plt.close()
+                logger.info(f"Saved probability histogram to {fname}")
+            except Exception as e:
+                logger.warning(f"Could not plot probability histogram for {model_name}: {e}")
         return results
     
-    def train_all_models(self, X_train: pd.DataFrame, y_train: pd.Series) -> pd.DataFrame:
+    def train_all_models(self, X_train: pd.DataFrame, y_train: pd.Series, X_test: pd.DataFrame = None, y_test: pd.Series = None, feature_method: str = None) -> pd.DataFrame:
         """
         Trains all models
-        
         Args:
             X_train: Training set features
             y_train: Training set target variable
-            
+            X_test: Test set features (optional, for probability plot)
+            y_test: Test set target (optional)
+            feature_method: 特征选择方法名（用于文件名）
         Returns:
             A DataFrame of training results for all models
         """
         logger.info("Training all models...")
-        
         models = self.get_models()
         results = []
-        
         for model_name in models.keys():
             try:
-                result = self.train_single_model(model_name, X_train, y_train)
+                result = self.train_single_model(model_name, X_train, y_train, X_test, y_test, feature_method)
                 results.append(result)
             except Exception as e:
                 logger.error(f"Error training {model_name}: {e}")
@@ -149,54 +160,43 @@ class ModelTrainer:
                     'cv_auc': 0.0,
                     'cv_f1': 0.0
                 })
-        
         results_df = pd.DataFrame(results)
         logger.info("All models training completed")
-        
         return results_df
     
     def train_models_for_feature_sets(self, 
                                      feature_sets: Dict[int, Dict[str, List[str]]],
                                      X_train: pd.DataFrame, 
-                                     y_train: pd.Series) -> pd.DataFrame:
+                                     y_train: pd.Series,
+                                     X_test: pd.DataFrame = None, y_test: pd.Series = None) -> pd.DataFrame:
         """
         Trains all models for multiple feature sets
-
         Args:
             feature_sets: A dictionary of feature sets, format: {top_n: {method: [features...]}}
             X_train: The complete training set features
             y_train: The training set target variable
-
+            X_test: The complete test set features (for probability plot)
+            y_test: The test set target (optional)
         Returns:
             A DataFrame containing model performance for all scenarios
         """
         logger.info("Starting model training for multiple feature sets...")
         all_results = []
-
         for top_n, methods in feature_sets.items():
             for method, features in methods.items():
                 if not features:
                     logger.warning(f"Skipping training for top_n={top_n}, method={method} due to empty feature list.")
                     continue
-
                 logger.info(f"--- Training for: top_n={top_n}, method={method} ---")
-                
-                # Select the feature subset for the current scenario
                 X_train_subset = X_train[features]
-                
-                # Train all models
-                scenario_results_df = self.train_all_models(X_train_subset, y_train)
-                
-                # Add scenario information
+                X_test_subset = X_test[features] if X_test is not None else None
+                scenario_results_df = self.train_all_models(X_train_subset, y_train, X_test_subset, y_test, feature_method=method)
                 scenario_results_df['top_n'] = top_n
                 scenario_results_df['feature_method'] = method
-                
                 all_results.append(scenario_results_df)
-
         if not all_results:
             logger.error("No models were trained. Please check feature sets.")
             return pd.DataFrame()
-
         final_results_df = pd.concat(all_results, ignore_index=True)
         logger.info("Completed model training for all feature sets.")
         return final_results_df
@@ -570,6 +570,64 @@ class ModelTrainer:
             
         plt.show()
 
+    def run_grouped_feature_modeling(self, X_train: pd.DataFrame, y_train: pd.Series, X_test: pd.DataFrame, y_test: pd.Series, feature_selectors: dict, top_ns: list, model_names: list):
+        """
+        按特征分组、FS方法和模型循环建模，输出每组的AUC、F1和概率分布直方图。
+        自动读取pipeline_config.FEATURE_CATEGORIES。
+        末尾自动做类别分布可视化。
+        """
+        from pipeline_config import FEATURE_CATEGORIES
+        from sklearn.metrics import roc_auc_score, f1_score
+        import matplotlib.pyplot as plt
+        import os
+        import pandas as pd
+        os.makedirs('outputs', exist_ok=True)
+        results = []
+        for fs_name, fs_func in feature_selectors.items():
+            for top_n in top_ns:
+                selected_features = fs_func(X_train, y_train, top_n=top_n)
+                for model_name in model_names:
+                    models = self.get_models()
+                    if model_name not in models:
+                        continue
+                    model = models[model_name]
+                    X_train_sel = X_train[selected_features]
+                    X_test_sel = X_test[selected_features]
+                    model.fit(X_train_sel, y_train)
+                    y_pred = model.predict(X_test_sel)
+                    y_pred_proba = model.predict_proba(X_test_sel)[:, 1]
+                    auc = roc_auc_score(y_test, y_pred_proba)
+                    f1 = f1_score(y_test, y_pred)
+                    # 概率分布图
+                    plt.figure(figsize=(6,4))
+                    plt.hist(y_pred_proba, bins=50)
+                    plt.xlabel('Predicted Probability for Positive Class')
+                    plt.ylabel('Count')
+                    plt.title(f'Proba: {model_name} | {fs_name} | Top{top_n}')
+                    plt.tight_layout()
+                    fname = f'outputs/proba_hist_{model_name}_{fs_name}_top{top_n}.png'
+                    plt.savefig(fname)
+                    plt.close()
+                    # 统计各类别特征数量
+                    cat_count = {cat: 0 for cat in FEATURE_CATEGORIES if cat != 'Label'}
+                    for feat in selected_features:
+                        for cat, feats in FEATURE_CATEGORIES.items():
+                            if cat == 'Label': continue
+                            if feat in feats:
+                                cat_count[cat] += 1
+                    results.append({'model': model_name, 'fs': fs_name, 'top_n': top_n, 'auc': auc, 'f1': f1, **cat_count})
+        results_df = pd.DataFrame(results)
+        results_df.to_csv('outputs/grouped_model_results.csv', index=False)
+        print('Grouped feature modeling results saved to outputs/grouped_model_results.csv')
+        print(results_df)
+        # 自动可视化类别分布
+        try:
+            from result_analyzer import ResultAnalyzer
+            analyzer = ResultAnalyzer()
+            analyzer.plot_category_distribution(results_df.melt(id_vars=['model','fs','top_n','auc','f1'], var_name='Category', value_name='Count'))
+        except Exception as e:
+            print(f'Category distribution plot failed: {e}')
+
 def main():
     """Main function to demonstrate the ModelTrainer class"""
     
@@ -587,7 +645,7 @@ def main():
     trainer = ModelTrainer()
     
     # Train all models and get CV results
-    cv_results = trainer.train_all_models(X_train, y_train)
+    cv_results = trainer.train_all_models(X_train, y_train, X_test, y_test)
     print("\nCV Results:")
     print(cv_results)
     

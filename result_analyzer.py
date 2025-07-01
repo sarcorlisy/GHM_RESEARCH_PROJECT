@@ -99,31 +99,27 @@ class ResultAnalyzer:
     def plot_category_distribution(self, stats_df: pd.DataFrame, save_path: str = None):
         """
         Visualizes the distribution of feature categories for each scenario.
-
         Args:
             stats_df: The statistical summary DataFrame.
             save_path: Optional path to save the plot.
         """
         print("\n🎨 Generating Feature Category Distribution Visualization:")
-        
         pivot_df = stats_df.pivot_table(
             index=['Top N', 'Method'], 
             columns='Category', 
             values='Count'
         ).fillna(0)
-        
         top_n_values = sorted(stats_df['Top N'].unique())
-        
+        # 横向并排
+        n = len(top_n_values)
         fig, axes = plt.subplots(
-            len(top_n_values), 1, 
-            figsize=(12, 6 * len(top_n_values)), 
-            sharex=True
+            1, n,  # 横向排列
+            figsize=(7 * n, 6),
+            sharey=True
         )
-        if len(top_n_values) == 1:
+        if n == 1:
             axes = [axes]
-
-        fig.suptitle('Category Distribution for Each Feature Selection Method by Top N', fontsize=16, y=1.0)
-
+        fig.suptitle('Category Distribution for Each Feature Selection Method by Top N', fontsize=16, y=1.02)
         for i, top_n in enumerate(top_n_values):
             ax = axes[i]
             data_subset = pivot_df.loc[top_n]
@@ -131,13 +127,13 @@ class ResultAnalyzer:
             ax.set_title(f'Top N = {top_n}')
             ax.set_ylabel('Number of Features')
             ax.tick_params(axis='x', rotation=45)
-            ax.legend(title='Feature Category', bbox_to_anchor=(1.02, 1), loc='upper left')
-
+            if i == n - 1:
+                ax.legend(title='Feature Category', bbox_to_anchor=(1.02, 1), loc='upper left')
+            else:
+                ax.get_legend().remove()
         plt.xlabel('Feature Selection Method')
-        plt.tight_layout(rect=[0, 0, 0.85, 0.96])
-        
+        plt.tight_layout(rect=[0, 0, 0.92, 0.96])
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
             logger.info(f"Category distribution plot saved to: {save_path}")
-
         plt.show() 
