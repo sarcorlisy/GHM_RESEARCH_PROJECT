@@ -19,6 +19,7 @@ import warnings
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
+import plot_style
 
 from pipeline_config import MODEL_CONFIG, MODELS, FEATURE_CATEGORIES
 
@@ -627,6 +628,170 @@ class ModelTrainer:
             analyzer.plot_category_distribution(results_df.melt(id_vars=['model','fs','top_n','auc','f1'], var_name='Category', value_name='Count'))
         except Exception as e:
             print(f'Category distribution plot failed: {e}')
+
+    def run_full_grouped_feature_experiment(
+        self,
+        X_train,
+        y_train,
+        X_test,
+        y_test,
+        feature_selectors,
+        top_ns,
+        metric='cv_f1'
+    ):
+        """
+        一站式分组特征选择+分组模型训练+可视化
+        """
+        # 1. 自动生成分组特征
+        feature_sets = {}
+        for top_n in top_ns:
+            feature_sets[top_n] = {}
+            for method_name, method_func in feature_selectors.items():
+                feature_sets[top_n][method_name] = method_func(X_train, y_train, top_n=top_n)
+
+        # 2. 分组训练
+        grouped_results_df = self.train_models_for_feature_sets(
+            feature_sets=feature_sets,
+            X_train=X_train,
+            y_train=y_train,
+            X_test=X_test,
+            y_test=y_test
+        )
+
+        # 3. 可视化
+        self.display_training_results(grouped_results_df, metric=metric)
+        self.plot_training_results(grouped_results_df, metric=metric)
+        self.plot_performance_vs_top_n(grouped_results_df)
+
+        return grouped_results_df
+
+    def run_category_grouped_feature_experiment(
+        self,
+        X_train,
+        y_train,
+        X_test,
+        y_test,
+        feature_categories,
+        feature_selectors,
+        model_names,
+        top_n=10,
+        metric='cv_f1'
+    ):
+        """
+        按特征大类分组，分别做FS和模型训练，输出每组cat下FS*Model的表现
+        """
+        results = []
+        for cat_name, cat_features in feature_categories.items():
+            # 只保留当前cat的特征（且要在X_train中实际存在）
+            valid_features = [f for f in cat_features if f in X_train.columns]
+            if not valid_features:
+                continue
+            X_train_cat = X_train[valid_features]
+            X_test_cat = X_test[valid_features]
+            for fs_name, fs_func in feature_selectors.items():
+                selected_features = fs_func(X_train_cat, y_train, top_n=top_n)
+                for model_name in model_names:
+                    try:
+                        res = self.train_single_model(
+                            model_name,
+                            X_train_cat[selected_features],
+                            y_train,
+                            X_test_cat[selected_features],
+                            y_test,
+                            feature_method=f"{cat_name}-{fs_name}"
+                        )
+                        res['feature_category'] = cat_name
+                        res['feature_selector'] = fs_name
+                        results.append(res)
+                    except Exception as e:
+                        print(f"Error in {cat_name}-{fs_name}-{model_name}: {e}")
+        results_df = pd.DataFrame(results)
+        # 可选：自动可视化
+        if not results_df.empty:
+            print("\n📊 分类分组FS*Model表现：")
+            from IPython.display import display
+            display(results_df)
+        return results_df
+
+    def plot_cat_fs_model_performance(self, results_df, metric='cv_f1'):
+        """
+        分组柱状图：每个特征大类下，不同FS和Model的表现
+        """
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+        plt.figure(figsize=(18, 8))
+        sns.set(style="whitegrid")
+        g = sns.catplot(
+            data=results_df,
+            x='feature_category',
+            y=metric,
+            hue='model_name',
+            col='feature_selector',
+            kind='bar',
+            height=6,
+            aspect=1.1,
+            palette='viridis'
+        )
+        g.set_titles("FS: {col_name}")
+        g.set_axis_labels("Feature Category", metric)
+        g.fig.suptitle("Model Performance by Feature Category", y=1.05, fontsize=16)
+        for ax in g.axes.flat:
+            for p in ax.patches:
+                ax.annotate(f'{p.get_height():.3f}',
+                            (p.get_x() + p.get_width() / 2., p.get_height()),
+                            ha='center', va='center',
+                            xytext=(0, 9),
+                            textcoords='offset points',
+                            fontsize=9)
+            ax.tick_params(axis='x', rotation=30)
+        plt.tight_layout(rect=[0, 0, 1, 0.98])
+        plt.show()
+
+    def plot_all_cat_heatmaps(self, results_df, metric='cv_f1'):
+        """
+        合并所有类别的FS*Model热力图到一张大图
+        """
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+        cats = results_df['feature_category'].unique()
+        n = len(cats)
+        fig, axes = plt.subplots(1, n, figsize=(4*n, 4), constrained_layout=True)
+        if n == 1:
+            axes = [axes]
+        for i, cat in enumerate(cats):
+            ax = axes[i]
+            pivot = results_df[results_df['feature_category'] == cat].pivot(
+                index='feature_selector', columns='model_name', values=metric
+            )
+            sns.heatmap(pivot, annot=True, fmt='.3f', cmap='YlGnBu', ax=ax, cbar=(i==n-1))
+            ax.set_title(cat, fontsize=11)
+            ax.set_ylabel('FS Method')
+            ax.set_xlabel('Model')
+        plt.suptitle('Performance Matrix of FS & Model by Feature Category', fontsize=14, y=1.02)
+        plt.show()
+
+    def plot_all_cat_heatmaps_multi_topn(self, results_df, metric='cv_f1'):
+        """
+        多个top_n时，合并所有类别的FS*Model热力图到一张大图（每行一个top_n，每列一个类别）
+        """
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+        cats = results_df['feature_category'].unique()
+        top_ns = sorted(results_df['top_n'].unique())
+        nrow, ncol = len(top_ns), len(cats)
+        fig, axes = plt.subplots(nrow, ncol, figsize=(4*ncol, 4*nrow), constrained_layout=True)
+        for i, top_n in enumerate(top_ns):
+            for j, cat in enumerate(cats):
+                ax = axes[i, j] if nrow > 1 else axes[j]
+                pivot = results_df[(results_df['feature_category'] == cat) & (results_df['top_n'] == top_n)].pivot(
+                    index='feature_selector', columns='model_name', values=metric
+                )
+                sns.heatmap(pivot, annot=True, fmt='.3f', cmap='YlGnBu', ax=ax, cbar=(i==0 and j==ncol-1))
+                ax.set_title(f"{cat} (TopN={top_n})", fontsize=11)
+                ax.set_ylabel('FS Method')
+                ax.set_xlabel('Model')
+        plt.suptitle('Performance Matrix of FS & Model by Feature Category and TopN', fontsize=14, y=1.02)
+        plt.show()
 
 def main():
     """Main function to demonstrate the ModelTrainer class"""

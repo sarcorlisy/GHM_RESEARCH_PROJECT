@@ -303,7 +303,7 @@ class FeatureSelector:
             plt.barh(range(len(features)), importance)
             plt.yticks(range(len(features)), features)
             plt.xlabel('Importance Score')
-            plt.title(f'Top {top_n} Features by {method}')
+            plt.title(f'Top {top_n} Features by {method}', fontsize=11)
             plt.gca().invert_yaxis()
             # No x-ticks for barh
         else:
@@ -322,10 +322,15 @@ class FeatureSelector:
                 axes[i].set_yticks(range(len(features)))
                 axes[i].set_yticklabels(features)
                 axes[i].set_xlabel('Importance Score')
-                axes[i].set_title(f'{method} - Top {top_n} Features')
+                axes[i].set_title(f'{method} - Top {top_n} Features', fontsize=11)
                 axes[i].invert_yaxis()
         
-        plt.tight_layout()
+        ax = plt.gca()
+        ax.set_xticks(ax.get_xticks())
+        ax.set_xticklabels(ax.get_xticks())
+        ax.set_xlabel('Importance Score')
+        ax.set_title('Feature Importance', fontsize=16)
+        ax.legend()
         
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
@@ -421,7 +426,7 @@ class FeatureSelector:
             for method, features in results_for_top_n.items():
                 selection_matrix[method] = [1 if f in features else 0 for f in all_selected_features]
             sns.heatmap(selection_matrix, ax=axes[i], cmap='Blues', cbar=False, annot=True, fmt='.0f')
-            axes[i].set_title(f'Top N = {top_n}')
+            axes[i].set_title(f'Top N = {top_n}', fontsize=11)
             axes[i].set_xlabel('Method')
             axes[i].set_ylabel('Feature')
             axes[i].set_xticklabels(axes[i].get_xticklabels(), rotation=45)

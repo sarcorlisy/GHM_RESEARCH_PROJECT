@@ -23,10 +23,11 @@ class EDAAnalyzer:
         """Plot the distribution of readmission categories."""
         plt.figure(figsize=(6,4))
         sns.countplot(x='readmitted', data=self.df, order=['NO', '>30', '<30'])
-        plt.title('Readmission Distribution')
+        plt.title('Readmission Distribution', fontsize=11)
         plt.xlabel('Readmission Category')
         plt.ylabel('Count')
         plt.xticks(rotation=45)
+        ax = plt.gca()
         plt.show()
         print(self.df['readmitted'].value_counts())
 
@@ -37,9 +38,10 @@ class EDAAnalyzer:
         if not missing.empty:
             plt.figure(figsize=(10,5))
             missing.plot(kind='bar')
-            plt.title('Missing Values per Feature')
+            plt.title('Missing Values per Feature', fontsize=11)
             plt.ylabel('Count')
             plt.xticks(rotation=45)
+            ax = plt.gca()
             plt.show()
         else:
             print("No missing values found.")
@@ -50,10 +52,11 @@ class EDAAnalyzer:
             if col in self.df.columns:
                 plt.figure(figsize=(6,4))
                 sns.histplot(self.df[col].dropna(), kde=True)
-                plt.title(f'Distribution of {col}')
+                plt.title(f'Distribution of {col}', fontsize=11)
                 plt.xlabel(col)
                 plt.ylabel('Count')
                 plt.xticks(rotation=45)
+                ax = plt.gca()
                 plt.show()
 
     def plot_categorical_distributions(self, features):
@@ -62,10 +65,11 @@ class EDAAnalyzer:
             if col in self.df.columns:
                 plt.figure(figsize=(6,4))
                 self.df[col].value_counts().plot(kind='bar')
-                plt.title(f'Distribution of {col}')
+                plt.title(f'Distribution of {col}', fontsize=11)
                 plt.xlabel(col)
                 plt.ylabel('Count')
                 plt.xticks(rotation=45)
+                ax = plt.gca()
                 plt.show()
 
     def plot_correlation_heatmap(self, save_path: str = None):
@@ -84,13 +88,14 @@ class EDAAnalyzer:
         corr = corr.dropna(axis=0, how='all').dropna(axis=1, how='all')
         plt.figure(figsize=(12, 10))
         sns.heatmap(corr, annot=True, fmt=".2f", cmap='coolwarm')
-        plt.title('Feature Correlation Heatmap')
+        plt.title('Feature Correlation Heatmap', fontsize=11)
         plt.xticks(rotation=45)
         plt.yticks(rotation=0)
         plt.tight_layout()
+        ax = plt.gca()
+        plt.show()
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        plt.show()
 
     def plot_top_diagnoses(self, top_n=10, icd9_mapping_path=None, show_category=True):
         """
@@ -112,6 +117,7 @@ class EDAAnalyzer:
         # 496 — Chronic airway obstruction, not elsewhere classified | 慢性阻塞性肺病（COPD）
         # 486 — Pneumonia, organism unspecified | 肺炎（病原体不明）
         # =====================================
+        plt.figure(figsize=(10, 6))
         diag_cols = [col for col in ['diag_1', 'diag_2', 'diag_3'] if col in self.df.columns]
         diagnosis_combined = pd.concat([self.df[col] for col in diag_cols])
         diagnosis_combined = diagnosis_combined.dropna().astype(str)
@@ -176,13 +182,13 @@ class EDAAnalyzer:
                 f"{code}\n{get_category(code)}" for code in diagnosis_counts.index.astype(str)
             ]
 
-        plt.figure(figsize=(10, 6))
         sns.barplot(x=labels, y=diagnosis_counts.values, palette="viridis")
-        plt.title(f"Top {top_n} Most Common Diagnoses Among Patients", fontsize=14)
+        plt.title(f"Top {top_n} Most Common Diagnoses Among Patients", fontsize=11)
         plt.xlabel("Diagnosis Code" if not show_category else "Diagnosis Code & Category", fontsize=12)
         plt.ylabel("Frequency", fontsize=12)
         plt.xticks(rotation=45)
         plt.tight_layout()
+        ax = plt.gca()
         plt.show()
         print(diagnosis_counts)
 
@@ -218,10 +224,11 @@ class EDAAnalyzer:
         )
         plt.figure(figsize=(12, 8))
         ax = sns.heatmap(heatmap_data, annot=True, fmt='.2f', cmap='YlGnBu', cbar_kws={'label': 'Readmission Rate (%)'}, linewidths=0.8, linecolor='black')
-        plt.title('Readmission Rate by Age Group and Gender', fontsize=16, weight='bold')
+        plt.title('Readmission Rate by Age Group and Gender', fontsize=11)
         plt.ylabel('Age Group', fontsize=12)
         plt.xlabel('Gender', fontsize=12)
         plt.tight_layout()
+        ax = plt.gca()
         plt.show()
 
     def plot_readmission_percentage_by_age_gender(self, readmission_col='readmitted', age_col='age_group', gender_col='gender'):
@@ -251,11 +258,12 @@ class EDAAnalyzer:
         readmission_percentage_melted = readmission_percentage.reset_index().melt(id_vars=[age_col, gender_col], var_name=readmission_col, value_name='percentage')
         plt.figure(figsize=(14, 8))
         sns.barplot(x=age_col, y='percentage', hue=readmission_col, data=readmission_percentage_melted, palette='Set2')
-        plt.title('Readmission Rate Distribution by Age Group and Gender')
-        plt.xlabel('Age Group')
-        plt.ylabel('Readmission Rate (%)')
+        plt.title('Readmission Rate Distribution by Age Group and Gender', fontsize=11)
+        plt.xlabel('Age Group', fontsize=12)
+        plt.ylabel('Readmission Rate (%)', fontsize=12)
         plt.xticks(rotation=45)
         plt.tight_layout()
+        ax = plt.gca()
         plt.show()
 
     def plot_readmission_heatmap_by_age_gender_advanced(self, readmission_col='readmitted', age_col='age_group', gender_col='gender'):
@@ -286,7 +294,6 @@ class EDAAnalyzer:
             if col not in readmission_percentage.columns:
                 readmission_percentage[col] = 0.0
         heatmap_data = readmission_percentage[['<30', '>30']].reset_index().pivot(index=age_col, columns=gender_col, values=['<30', '>30'])
-        import seaborn as sns
         sns.set(style="whitegrid", palette="muted")
         plt.figure(figsize=(12, 8))
         ax = sns.heatmap(heatmap_data, annot=True, fmt='.2f', cmap='YlGnBu', cbar_kws={'label': 'Readmission Rate (%)'}, linewidths=0.8, linecolor='black')
@@ -297,11 +304,12 @@ class EDAAnalyzer:
                 text.set_text(f'{float(val):.2f}%')
             except:
                 pass
-        plt.title('Readmission Rate by Age Group and Gender', fontsize=16, weight='bold')
+        plt.title('Readmission Rate by Age Group and Gender', fontsize=11)
         plt.ylabel('Age Group', fontsize=12)
         plt.xlabel('Gender', fontsize=12)
         plt.grid(visible=True, linestyle='--', linewidth=0.5, color='black')
         plt.tight_layout()
+        ax = plt.gca()
         plt.show()
 
     # ========== 新增：年龄区间中点函数 ==========
@@ -323,8 +331,6 @@ class EDAAnalyzer:
         """
         按age_group分组画住院时长均值柱状图，风格与10Yi一致。
         """
-        import matplotlib.pyplot as plt
-        import seaborn as sns
         # 生成age_group
         self.df['age_group'] = self.df[age_col].str.extract(r'(\d+-\d+)')
         avg_stay_by_age_group = self.df.groupby('age_group')[stay_col].mean()
@@ -332,45 +338,41 @@ class EDAAnalyzer:
         print(avg_stay_by_age_group)
         plt.figure(figsize=(10,6))
         sns.barplot(x=avg_stay_by_age_group.index, y=avg_stay_by_age_group.values, palette="viridis")
-        plt.title("Average Hospital Stay Time by Age Group")
+        plt.title("Average Hospital Stay Time by Age Group", fontsize=11)
         plt.xlabel("Age Group")
         plt.ylabel("Average Time in Hospital (days)")
         plt.xticks(rotation=90)
         plt.tight_layout()
-        plt.savefig('Average Time in Hospital (days).png')
+        ax = plt.gca()
         plt.show()
 
     def plot_avg_stay_by_age_gender_box(self, age_col='age', stay_col='time_in_hospital', gender_col='gender'):
         """
         按age_group和gender画住院时长箱线图，风格与10Yi一致。
         """
-        import matplotlib.pyplot as plt
-        import seaborn as sns
         self.df['age_group'] = self.df[age_col].str.extract(r'(\d+-\d+)')
         plt.figure(figsize=(12, 6))
         sns.boxplot(x='age_group', y=stay_col, hue=gender_col, data=self.df, palette='Set2')
-        plt.title('Hospital Stay Time vs Gender and Age Group')
+        plt.title('Hospital Stay Time vs Gender and Age Group', fontsize=11)
         plt.xticks(rotation=90)
         plt.tight_layout()
-        plt.savefig('hospital_stay_time_vs_gender_age_group.png')
+        ax = plt.gca()
         plt.show()
 
     def plot_top_diagnoses_simple(self, top_n=10):
         """
         统计并画前10诊断柱状图（不做复杂映射），风格与10Yi一致。
         """
-        import matplotlib.pyplot as plt
-        import seaborn as sns
         diagnosis_combined = pd.concat([self.df['diag_1'], self.df['diag_2'], self.df['diag_3']])
         diagnosis_counts = diagnosis_combined.value_counts()
         top_10_diagnoses = diagnosis_counts.head(top_n)
         plt.figure(figsize=(10, 6))
         sns.barplot(x=top_10_diagnoses.index, y=top_10_diagnoses.values, palette="viridis")
-        plt.title("Top 10 Most Common Diagnoses Among Patients", fontsize=14)
+        plt.title("Top 10 Most Common Diagnoses Among Patients", fontsize=11)
         plt.xlabel("Diagnosis Code", fontsize=12)
         plt.ylabel("Frequency", fontsize=12)
         plt.xticks(rotation=90)
-        plt.savefig('Top 10 Most Common Diagnoses Among Patients.png')
+        ax = plt.gca()
         plt.show()
 
     def plot_readmission_rate_by_age_gender(self, age_col='age', gender_col='gender', readmission_col='readmitted'):
@@ -394,8 +396,6 @@ class EDAAnalyzer:
         summary = summary.reset_index()
         melted = summary.melt(id_vars=['age_group', gender_col], var_name='readmitted', value_name='percentage')
         # 分组柱状图
-        import matplotlib.pyplot as plt
-        import seaborn as sns
         plt.figure(figsize=(14, 7))
         sns.barplot(
             x='age_group',
@@ -405,11 +405,12 @@ class EDAAnalyzer:
             palette='Set2',
             dodge=True
         )
-        plt.title('Early Readmission Rate by Age Group and Gender', fontsize=15)
+        plt.title('Early Readmission Rate by Age Group and Gender', fontsize=11)
         plt.xlabel('Age Group', fontsize=12)
         plt.ylabel('Early Readmission Rate (%)', fontsize=12)
         plt.legend(title='Gender')
         plt.tight_layout()
+        ax = plt.gca()
         plt.show()
         # 清理临时列
         if temp_col in df.columns:
@@ -420,8 +421,6 @@ class EDAAnalyzer:
         """
         画age_group为y轴，gender为x轴，x轴每个gender下有Early/No Early Readmission（No Early包含NO和>30），单元格为百分比。
         """
-        import matplotlib.pyplot as plt
-        import seaborn as sns
         self.df['age_group'] = self.df[age_col].str.extract(r'(\d+-\d+)')
         self.df['readmit_bin'] = self.df[readmission_col].apply(lambda x: 'Early Readmission' if x == '<30' else 'No Early Readmission')
         self.df['gender_readmit'] = self.df['readmit_bin'] + '-' + self.df[gender_col].astype(str)
@@ -441,10 +440,11 @@ class EDAAnalyzer:
                 text.set_text(f'{float(val):.2f}%')
             except:
                 pass
-        plt.title('Early vs No Early Readmission Rate by Age Group and Gender', fontsize=16, weight='bold')
+        plt.title('Early vs No Early Readmission Rate by Age Group and Gender', fontsize=11)
         plt.ylabel('Age Group', fontsize=12)
         plt.xlabel('Gender')
         plt.tight_layout()
+        ax = plt.gca()
         plt.show()
         if 'readmit_bin' in self.df.columns:
             self.df.drop(columns=['readmit_bin'], inplace=True)
@@ -456,8 +456,6 @@ class EDAAnalyzer:
         """
         统计并可视化不同comorbidity下Early Readmission和No Early Readmission（NO+>30）再入院率的分布，分母为所有患者。
         """
-        import matplotlib.pyplot as plt
-        import seaborn as sns
         self.df['comorbidity_1'] = self.df['diag_1'].apply(categorize_disease_func)
         self.df['comorbidity_2'] = self.df['diag_2'].apply(categorize_disease_func)
         self.df['comorbidity_3'] = self.df['diag_3'].apply(categorize_disease_func)
@@ -474,12 +472,12 @@ class EDAAnalyzer:
         melted = summary.melt(id_vars=['comorbidity'], value_vars=['Early Readmission Rate (%)', 'No Early Readmission Rate (%)'], var_name='readmitted', value_name='percentage')
         plt.figure(figsize=(14,6))
         sns.barplot(x='comorbidity', y='percentage', hue='readmitted', data=melted, palette='Set2')
-        plt.title("Early vs No Early Readmission Rate for Different Comorbidities", fontsize=14)
+        plt.title("Early vs No Early Readmission Rate for Different Comorbidities", fontsize=11)
         plt.xlabel("Comorbidities", fontsize=12)
         plt.ylabel("Readmission Rate (%)", fontsize=12)
         plt.xticks(rotation=45)
         plt.tight_layout()
-        plt.savefig('readmission_vs_comorbidities.png')
+        ax = plt.gca()
         plt.show()
         self.df.drop(columns=['comorbidity_1', 'comorbidity_2', 'comorbidity_3', 'readmit_bin'], inplace=True)
         return summary[['comorbidity', 'Early Readmission Rate (%)', 'No Early Readmission Rate (%)']]
@@ -511,13 +509,12 @@ class EDAAnalyzer:
         plt.figure(figsize=(12, 6))
         sns.barplot(data=medication_summary_reset, x="Medication", y="<30", hue="Dose Change", palette="coolwarm")
         plt.xticks(rotation=45)
-        plt.xlabel("Medication")
-        plt.ylabel("Readmission Rate (<30 Days)")
-        plt.title("Readmission Rate (<30 Days) by Medication & Dose Change")
+        plt.xlabel("Medication", fontsize=12)
+        plt.ylabel("Readmission Rate (<30 Days)", fontsize=12)
+        plt.title("Readmission Rate (<30 Days) by Medication & Dose Change", fontsize=11)
         plt.legend(title="Dose Change")
         plt.tight_layout()
-        if save_path is not None:
-            plt.savefig(save_path)
+        ax = plt.gca()
         plt.show()
         return medication_summary_reset[["Medication", "Dose Change", "<30"]]
 
@@ -541,13 +538,12 @@ class EDAAnalyzer:
             linewidths=0.7,
             cbar_kws={'label': 'Readmission Rate (<30 Days)'}
         )
-        plt.title("📊 Readmission Rates (<30 Days) by Medication & Dose Change", fontsize=14, fontweight="bold", pad=15)
-        plt.ylabel("Medication", fontsize=12, fontweight="bold")
-        plt.xlabel("Dose Change", fontsize=12, fontweight="bold")
+        plt.title("📊 Readmission Rates (<30 Days) by Medication & Dose Change", fontsize=11)
+        plt.ylabel("Medication", fontsize=12)
+        plt.xlabel("Dose Change", fontsize=12)
         plt.xticks(rotation=45, fontsize=10)
         plt.yticks(fontsize=10)
         plt.tight_layout()
-        if save_path:
-            plt.savefig(save_path)
+        ax = plt.gca()
         plt.show()
         return pivot_table 

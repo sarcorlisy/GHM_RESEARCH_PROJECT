@@ -119,18 +119,13 @@ class ResultAnalyzer:
         )
         if n == 1:
             axes = [axes]
-        fig.suptitle('Category Distribution for Each Feature Selection Method by Top N', fontsize=16, y=1.02)
         for i, top_n in enumerate(top_n_values):
             ax = axes[i]
             data_subset = pivot_df.loc[top_n]
             data_subset.plot(kind='bar', stacked=True, ax=ax, colormap='viridis', width=0.8)
-            ax.set_title(f'Top N = {top_n}')
+            ax.set_title(f'Top N = {top_n}', fontsize=11)
             ax.set_ylabel('Number of Features')
-            ax.tick_params(axis='x', rotation=45)
-            if i == n - 1:
-                ax.legend(title='Feature Category', bbox_to_anchor=(1.02, 1), loc='upper left')
-            else:
-                ax.get_legend().remove()
+            ax.legend(title='Feature Category')
         plt.xlabel('Feature Selection Method')
         plt.tight_layout(rect=[0, 0, 0.92, 0.96])
         if save_path:
