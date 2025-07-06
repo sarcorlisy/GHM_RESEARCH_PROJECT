@@ -202,6 +202,8 @@ class ModelTrainer:
         logger.info("Completed model training for all feature sets.")
         return final_results_df
 
+    
+
     def display_training_results(self, results_df: pd.DataFrame, metric='cv_auc') -> None:
         """
         Displays multi-scenario training results in tables and pivot tables
@@ -792,6 +794,48 @@ class ModelTrainer:
                 ax.set_xlabel('Model')
         plt.suptitle('Performance Matrix of FS & Model by Feature Category and TopN', fontsize=14, y=1.02)
         plt.show()
+
+    def evaluate_all_combinations_on_val_and_test(
+        self, feature_sets, X_train, y_train, X_val, y_val, X_test, y_test
+    ):
+        """
+        针对所有特征选择方法、top_n、模型组合，输出validation和test的AUC/F1。
+        Args:
+            feature_sets: {top_n: {fs_method: [features...]}}
+            X_train, y_train: 训练集
+            X_val, y_val: 验证集
+            X_test, y_test: 测试集
+        Returns:
+            DataFrame: 每个组合的val/test AUC、F1
+        """
+        import pandas as pd
+        from sklearn.metrics import roc_auc_score, f1_score
+        results = []
+        for top_n, methods in feature_sets.items():
+            for fs_method, features in methods.items():
+                for model_name in self.get_models().keys():
+                    model = self.get_models()[model_name]
+                    model.fit(X_train[features], y_train)
+                    # 验证集
+                    y_val_pred = model.predict(X_val[features])
+                    y_val_prob = model.predict_proba(X_val[features])[:, 1]
+                    val_auc = roc_auc_score(y_val, y_val_prob)
+                    val_f1 = f1_score(y_val, y_val_pred)
+                    # 测试集
+                    y_test_pred = model.predict(X_test[features])
+                    y_test_prob = model.predict_proba(X_test[features])[:, 1]
+                    test_auc = roc_auc_score(y_test, y_test_prob)
+                    test_f1 = f1_score(y_test, y_test_pred)
+                    results.append({
+                        'top_n': top_n,
+                        'fs_method': fs_method,
+                        'model': model_name,
+                        'val_auc': val_auc,
+                        'val_f1': val_f1,
+                        'test_auc': test_auc,
+                        'test_f1': test_f1,
+                    })
+        return pd.DataFrame(results)
 
 def main():
     """Main function to demonstrate the ModelTrainer class"""

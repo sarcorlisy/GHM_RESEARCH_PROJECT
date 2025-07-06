@@ -204,6 +204,12 @@ class HospitalReadmissionPipeline:
         logger.info("Training Results:")
         logger.info(self.training_results.to_string())
         
+        # Evaluate on the validation set
+        self.validation_results = self.model_trainer.evaluate_on_validation_set(X_val_selected, y_val)
+        
+        logger.info("Validation Results:")
+        logger.info(self.validation_results.to_string())
+        
         # Evaluate on the test set
         self.test_results = self.model_trainer.evaluate_on_test_set(X_test_selected, y_test)
         
