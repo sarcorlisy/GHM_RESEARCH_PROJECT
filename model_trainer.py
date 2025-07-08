@@ -837,6 +837,172 @@ class ModelTrainer:
                     })
         return pd.DataFrame(results)
 
+    def grid_search_on_validation(self, fs_func, model_cls, param_grid, top_ns, X_train, y_train, X_val, y_val):
+        """
+        对指定特征选择方法、模型、top_n，循环参数组合，仅在validation集上输出AUC/F1。
+        Args:
+            fs_func: 特征选择函数
+            model_cls: 模型类
+            param_grid: dict, 参数网格
+            top_ns: list, top_n列表
+            X_train, y_train: 训练集
+            X_val, y_val: 验证集
+        Returns:
+            DataFrame: 每组参数和top_n的val_auc/val_f1
+        """
+        import itertools
+        import pandas as pd
+        from sklearn.metrics import roc_auc_score, f1_score
+        results = []
+        keys, values = zip(*param_grid.items()) if param_grid else ([], [])
+        for top_n in top_ns:
+            features = fs_func(X_train, y_train, top_n=top_n)
+            for param_combo in itertools.product(*values) if values else [()]:
+                params = dict(zip(keys, param_combo))
+                model = model_cls(**params) if params else model_cls()
+                model.fit(X_train[features], y_train)
+                y_val_pred = model.predict(X_val[features])
+                y_val_prob = model.predict_proba(X_val[features])[:, 1]
+                val_auc = roc_auc_score(y_val, y_val_prob)
+                val_f1 = f1_score(y_val, y_val_pred)
+                results.append({
+                    'top_n': top_n,
+                    **params,
+                    'val_auc': val_auc,
+                    'val_f1': val_f1
+                })
+        return pd.DataFrame(results)
+
+    def evaluate_on_test_with_config(self, fs_func, model_cls, params, top_n, X_train, y_train, X_test, y_test):
+        """
+        对指定特征选择方法、模型、top_n和参数，在test集上输出AUC/F1。
+        Args:
+            fs_func: 特征选择函数
+            model_cls: 模型类
+            params: dict, 模型参数
+            top_n: int
+            X_train, y_train: 训练集
+            X_test, y_test: 测试集
+        Returns:
+            dict: test_auc, test_f1
+        """
+        from sklearn.metrics import roc_auc_score, f1_score
+        features = fs_func(X_train, y_train, top_n=top_n)
+        model = model_cls(**params) if params else model_cls()
+        model.fit(X_train[features], y_train)
+        y_test_pred = model.predict(X_test[features])
+        y_test_prob = model.predict_proba(X_test[features])[:, 1]
+        test_auc = roc_auc_score(y_test, y_test_prob)
+        test_f1 = f1_score(y_test, y_test_pred)
+        return {'test_auc': test_auc, 'test_f1': test_f1}
+
+    def param_search_on_fixed_features(self, feature_list, model_cls, param_grid, X_train, y_train, X_val, y_val):
+        """
+        只在已选好的特征子集上循环参数组合，输出validation的AUC/F1。
+        Args:
+            feature_list: list, 已选好的特征名
+            model_cls: 模型类
+            param_grid: dict, 参数网格
+            X_train, y_train: 训练集
+            X_val, y_val: 验证集
+        Returns:
+            DataFrame: 每组参数的val_auc/val_f1
+        """
+        import itertools
+        import pandas as pd
+        from sklearn.metrics import roc_auc_score, f1_score
+        results = []
+        keys, values = zip(*param_grid.items()) if param_grid else ([], [])
+        for param_combo in itertools.product(*values) if values else [()]:
+            params = dict(zip(keys, param_combo))
+            model = model_cls(**params) if params else model_cls()
+            model.fit(X_train[feature_list], y_train)
+            y_val_pred = model.predict(X_val[feature_list])
+            y_val_prob = model.predict_proba(X_val[feature_list])[:, 1]
+            val_auc = roc_auc_score(y_val, y_val_prob)
+            val_f1 = f1_score(y_val, y_val_pred)
+            results.append({
+                **params,
+                'val_auc': val_auc,
+                'val_f1': val_f1
+            })
+        return pd.DataFrame(results)
+
+    def param_search_all_models_on_fixed_features(self, feature_list, model_classes, param_grids, X_train, y_train, X_val, y_val):
+        """
+        对同一特征子集, 循环所有模型, 每个模型自动调参, 输出最优参数和分数.
+        Args:
+            feature_list: list, 已选特征名
+            model_classes: dict, {model_name: model_cls}
+            param_grids: dict, {model_name: param_grid}
+            X_train, y_train: 训练集
+            X_val, y_val: 验证集
+        Returns:
+            DataFrame: 每个模型的最优参数和val_auc/val_f1
+        """
+        import pandas as pd
+        results = []
+        for model_name, model_cls in model_classes.items():
+            param_grid = param_grids[model_name]
+            val_results = self.param_search_on_fixed_features(
+                feature_list, model_cls, param_grid, X_train, y_train, X_val, y_val
+            )
+            best_row = val_results.loc[val_results['val_auc'].idxmax()]
+            result = {'model': model_name, 'val_auc': best_row['val_auc'], 'val_f1': best_row['val_f1']}
+            for k in param_grid.keys():
+                result[k] = best_row[k]
+            results.append(result)
+        return pd.DataFrame(results)
+
+    def batch_param_search_and_test(
+        self, fs_name, top_ns, selected_features_dict, model_classes, param_grids,
+        X_train_balanced, y_train_balanced, X_val, y_val, X_test, y_test
+    ):
+        """
+        批量对指定FS、top_ns、所有模型调参并在test集评估，返回所有validation和test最优结果DataFrame。
+        不保存Excel，Excel保存逻辑由外部控制。
+        """
+        import pandas as pd
+        all_val_results = []
+        all_test_results = []
+        for top_n in top_ns:
+            feature_list = selected_features_dict[(top_n,fs_name )]
+            for model_name, model_cls in model_classes.items():
+                param_grid = param_grids[model_name]
+                # 1. validation调参
+                val_results = self.param_search_on_fixed_features(
+                    feature_list, model_cls, param_grid,
+                    X_train_balanced, y_train_balanced, X_val, y_val
+                )
+                val_results['model'] = model_name
+                val_results['fs'] = fs_name
+                val_results['top_n'] = top_n
+                all_val_results.append(val_results)
+
+                # 2. 选最优参数
+                best_row = val_results.loc[val_results['val_auc'].idxmax()]
+                param_keys = list(param_grid.keys())
+                params = {k: best_row[k] for k in param_keys}
+
+                # 3. test集评估
+                test_result = self.evaluate_on_test_with_config(
+                    lambda X, y, top_n: feature_list,
+                    model_cls, params, top_n,
+                    X_train_balanced, y_train_balanced, X_test, y_test
+                )
+                test_result.update({
+                    'model': model_name,
+                    'fs': fs_name,
+                    'top_n': top_n,
+                    **params,
+                    'val_auc': best_row['val_auc'],
+                    'val_f1': best_row['val_f1']
+                })
+                all_test_results.append(test_result)
+        all_val_results_df = pd.concat(all_val_results, ignore_index=True)
+        all_test_results_df = pd.DataFrame(all_test_results)
+        return all_val_results_df, all_test_results_df
+
 def main():
     """Main function to demonstrate the ModelTrainer class"""
     

@@ -437,6 +437,20 @@ class FeatureSelector:
             logger.info(f"Feature selection matrix plot saved to: {save_path}")
         plt.show()
 
+def flatten_multiple_results(multiple_results):
+    """
+    将select_features_multiple_topn的输出扁平化为{(fs_name, top_n): feature_list}结构。
+    Args:
+        multiple_results: dict, {fs_name: {top_n: [features...]}}
+    Returns:
+        dict: {(fs_name, top_n): feature_list}
+    """
+    selected_features_dict = {}
+    for fs_name, topn_dict in multiple_results.items():
+        for top_n, features in topn_dict.items():
+            selected_features_dict[(fs_name, top_n)] = features
+    return selected_features_dict
+
 def main():
     """主函数，用于测试特征选择功能"""
     from data_loader import DataLoader

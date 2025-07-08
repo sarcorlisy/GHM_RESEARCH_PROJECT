@@ -13,6 +13,23 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+def get_selected_features_dict(feature_selectors, X_train, y_train, top_n_list):
+    """
+    生成所有特征选择方法和top_n组合的特征子集字典。
+    Args:
+        feature_selectors: dict, 特征选择方法名到函数的映射
+        X_train, y_train: 训练集
+        top_n_list: list, top_n的取值
+    Returns:
+        dict: (fs_name, top_n) -> feature_list
+    """
+    selected_features_dict = {}
+    for fs_name, fs_func in feature_selectors.items():
+        for top_n in top_n_list:
+            features = fs_func(X_train, y_train, top_n=top_n)
+            selected_features_dict[(fs_name, top_n)] = features
+    return selected_features_dict
+
 def run_validation_demo():
     """
     运行完整的validation demo
@@ -64,26 +81,19 @@ def run_validation_demo():
     # 3. 特征选择
     logger.info("\n3. 特征选择...")
     feature_selector = FeatureSelector()
-    
-    # 使用多种特征选择方法
-    feature_methods = {
-        'MutualInfo': feature_selector.select_features_mutual_info,
-        'RandomForest': feature_selector.select_features_random_forest,
-        'L1': feature_selector.select_features_l1
-    }
-    
-    selected_features = {}
-    for method_name, method_func in feature_methods.items():
-        features = method_func(X_train_balanced, y_train_balanced, top_n=20)
-        selected_features[method_name] = features
-        logger.info(f"{method_name}: 选择了 {len(features)} 个特征")
+    feature_selectors = feature_selector.get_feature_selectors()
+    top_n_list = [5, 10, 15]
+
+    # 新增：保存所有方法和top_n的特征子集
+    selected_features_dict = get_selected_features_dict(feature_selectors, X_train_balanced, y_train_balanced, top_n_list)
+    logger.info(f"已保存所有特征选择方法和top_n组合的特征子集，共{len(selected_features_dict)}组")
     
     # 4. 模型训练和验证
     logger.info("\n4. 模型训练和验证...")
     model_trainer = ModelTrainer(random_state=42)
     
     # 使用最佳特征集进行训练
-    best_features = selected_features['MutualInfo']
+    best_features = selected_features_dict[('MutualInfo', 10)]
     logger.info(f"使用 MutualInfo 选择的 {len(best_features)} 个特征")
     
     X_train_selected = X_train_balanced[best_features]
@@ -177,4 +187,4 @@ def run_validation_demo():
     }
 
 if __name__ == "__main__":
-    results = run_validation_demo() 
+    run_validation_demo() 
