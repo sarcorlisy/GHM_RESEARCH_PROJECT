@@ -545,5 +545,5 @@ class EDAAnalyzer:
         plt.yticks(fontsize=10)
         plt.tight_layout()
         ax = plt.gca()
-        plt.show()
+        plt.show() 
         return pivot_table 

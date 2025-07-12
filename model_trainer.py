@@ -1003,6 +1003,131 @@ class ModelTrainer:
         all_test_results_df = pd.DataFrame(all_test_results)
         return all_val_results_df, all_test_results_df
 
+    def run_grid_search_for_all_fs_methods(
+        self, 
+        fs_names: List[str], 
+        top_n: int, 
+        selected_features_dict: Dict, 
+        model_classes: Dict, 
+        param_grids: Dict, 
+        X_train_balanced: pd.DataFrame, 
+        y_train_balanced: pd.Series, 
+        X_val: pd.DataFrame, 
+        y_val: pd.Series, 
+        X_test: pd.DataFrame, 
+        y_test: pd.Series,
+        cv_folds: int = 3
+    ) -> Tuple[List[pd.DataFrame], List[pd.DataFrame], List[pd.DataFrame]]:
+        """
+        为所有特征选择方法执行GridSearchCV
+        
+        Args:
+            fs_names: 特征选择方法名称列表
+            top_n: 特征数量
+            selected_features_dict: 特征选择结果字典
+            model_classes: 模型类字典
+            param_grids: 参数网格字典
+            X_train_balanced: 平衡后的训练集特征
+            y_train_balanced: 平衡后的训练集标签
+            X_val: 验证集特征
+            y_val: 验证集标签
+            X_test: 测试集特征
+            y_test: 测试集标签
+            cv_folds: 交叉验证折数
+            
+        Returns:
+            Tuple of (all_val_results, all_test_results, all_cv_results_list)
+        """
+        from sklearn.model_selection import GridSearchCV
+        from sklearn.metrics import roc_auc_score, f1_score
+        
+        all_val_results = []
+        all_test_results = []
+        all_cv_results_list = []
+        
+        for fs_name in fs_names:
+            feature_list = selected_features_dict[(top_n, fs_name)]
+            val_results = []
+            test_results = []
+            cv_results_list = []
+            
+            for model_name, model_cls in model_classes.items():
+                print(f"\nGrid search for {fs_name} - {model_name} ...")
+                
+                # 创建带random_state的模型实例
+                if model_name == 'RandomForest':
+                    base_model = model_cls(random_state=self.random_state)
+                elif model_name == 'LogisticRegression':
+                    base_model = model_cls(random_state=self.random_state)
+                elif model_name == 'XGBoost':
+                    base_model = model_cls(random_state=self.random_state)
+                else:
+                    base_model = model_cls()
+                
+                grid = GridSearchCV(
+                    estimator=base_model,
+                    param_grid=param_grids[model_name],
+                    scoring='roc_auc',
+                    cv=cv_folds,
+                    n_jobs=-1,
+                    return_train_score=False
+                )
+                
+                grid.fit(X_train_balanced[feature_list], y_train_balanced)
+                best_params = grid.best_params_
+                print("Best params:", best_params)
+                
+                # 保存所有CV结果
+                all_cv_results = pd.DataFrame(grid.cv_results_)
+                all_cv_results['model'] = model_name
+                all_cv_results['fs'] = fs_name
+                all_cv_results['top_n'] = top_n
+                cv_results_list.append(all_cv_results)
+                
+                # 验证集评估
+                y_val_pred = grid.best_estimator_.predict(X_val[feature_list])
+                y_val_prob = grid.best_estimator_.predict_proba(X_val[feature_list])[:, 1]
+                val_auc = roc_auc_score(y_val, y_val_prob)
+                val_f1 = f1_score(y_val, y_val_pred)
+                
+                val_results.append({
+                    'model': model_name,
+                    'fs': fs_name,
+                    'top_n': top_n,
+                    **best_params,
+                    'val_auc': val_auc,
+                    'val_f1': val_f1
+                })
+                
+                # 测试集评估
+                y_test_pred = grid.best_estimator_.predict(X_test[feature_list])
+                y_test_prob = grid.best_estimator_.predict_proba(X_test[feature_list])[:, 1]
+                test_auc = roc_auc_score(y_test, y_test_prob)
+                test_f1 = f1_score(y_test, y_test_pred)
+                
+                test_results.append({
+                    'model': model_name,
+                    'fs': fs_name,
+                    'top_n': top_n,
+                    **best_params,
+                    'test_auc': test_auc,
+                    'test_f1': test_f1
+                })
+            
+            # 转换为DataFrame
+            val_df = pd.DataFrame(val_results)
+            test_df = pd.DataFrame(test_results)
+            all_cv_results_df = pd.concat(cv_results_list, ignore_index=True)
+            
+            # 添加到总结果列表
+            all_val_results.append(val_df)
+            all_test_results.append(test_df)
+            all_cv_results_list.append(all_cv_results_df)
+            
+            print(f"{fs_name} GridSearchCV completed")
+        
+        return all_val_results, all_test_results, all_cv_results_list
+
 def main():
     """Main function to demonstrate the ModelTrainer class"""
     
