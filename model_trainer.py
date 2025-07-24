@@ -143,7 +143,7 @@ class ModelTrainer:
             y_train: Training set target variable
             X_test: Test set features (optional, for probability plot)
             y_test: Test set target (optional)
-            feature_method: 特征选择方法名（用于文件名）
+            feature_method: Feature selection method name (for file naming)
         Returns:
             A DataFrame of training results for all models
         """
@@ -575,9 +575,9 @@ class ModelTrainer:
 
     def run_grouped_feature_modeling(self, X_train: pd.DataFrame, y_train: pd.Series, X_test: pd.DataFrame, y_test: pd.Series, feature_selectors: dict, top_ns: list, model_names: list):
         """
-        按特征分组、FS方法和模型循环建模，输出每组的AUC、F1和概率分布直方图。
-        自动读取pipeline_config.FEATURE_CATEGORIES。
-        末尾自动做类别分布可视化。
+        For each feature group, FS method, and model, perform modeling and output AUC, F1, and probability distribution histogram for each group.
+        Automatically reads pipeline_config.FEATURE_CATEGORIES.
+        At the end, automatically visualizes category distribution.
         """
         from pipeline_config import FEATURE_CATEGORIES
         from sklearn.metrics import roc_auc_score, f1_score
@@ -642,7 +642,7 @@ class ModelTrainer:
         metric='cv_f1'
     ):
         """
-        一站式分组特征选择+分组模型训练+可视化
+        One-stop grouped feature selection + grouped model training + visualization
         """
         # 1. 自动生成分组特征
         feature_sets = {}
@@ -680,7 +680,7 @@ class ModelTrainer:
         metric='cv_f1'
     ):
         """
-        按特征大类分组，分别做FS和模型训练，输出每组cat下FS*Model的表现
+        For each feature category, perform FS and model training separately, and output the performance of FS*Model for each category.
         """
         results = []
         for cat_name, cat_features in feature_categories.items():
@@ -717,7 +717,7 @@ class ModelTrainer:
 
     def plot_cat_fs_model_performance(self, results_df, metric='cv_f1'):
         """
-        分组柱状图：每个特征大类下，不同FS和Model的表现
+        Grouped bar chart: For each feature category, show the performance of different FS and Model
         """
         import matplotlib.pyplot as plt
         import seaborn as sns
@@ -751,7 +751,7 @@ class ModelTrainer:
 
     def plot_all_cat_heatmaps(self, results_df, metric='cv_f1'):
         """
-        合并所有类别的FS*Model热力图到一张大图
+        Merge all category FS*Model heatmaps into one large figure
         """
         import matplotlib.pyplot as plt
         import seaborn as sns
@@ -774,7 +774,7 @@ class ModelTrainer:
 
     def plot_all_cat_heatmaps_multi_topn(self, results_df, metric='cv_f1'):
         """
-        多个top_n时，合并所有类别的FS*Model热力图到一张大图（每行一个top_n，每列一个类别）
+        When there are multiple top_n, merge all category FS*Model heatmaps into one large figure (one row per top_n, one column per category)
         """
         import matplotlib.pyplot as plt
         import seaborn as sns
@@ -799,14 +799,14 @@ class ModelTrainer:
         self, feature_sets, X_train, y_train, X_val, y_val, X_test, y_test
     ):
         """
-        针对所有特征选择方法、top_n、模型组合，输出validation和test的AUC/F1。
+        For all combinations of feature selection methods, top_n, and models, output validation and test AUC/F1.
         Args:
             feature_sets: {top_n: {fs_method: [features...]}}
-            X_train, y_train: 训练集
-            X_val, y_val: 验证集
-            X_test, y_test: 测试集
+            X_train, y_train: Training set
+            X_val, y_val: Validation set
+            X_test, y_test: Test set
         Returns:
-            DataFrame: 每个组合的val/test AUC、F1
+            DataFrame: val/test AUC, F1 for each combination
         """
         import pandas as pd
         from sklearn.metrics import roc_auc_score, f1_score
@@ -839,16 +839,16 @@ class ModelTrainer:
 
     def grid_search_on_validation(self, fs_func, model_cls, param_grid, top_ns, X_train, y_train, X_val, y_val):
         """
-        对指定特征选择方法、模型、top_n，循环参数组合，仅在validation集上输出AUC/F1。
+        For the specified feature selection method, model, and top_n, loop through parameter combinations, and output AUC/F1 only on the validation set.
         Args:
-            fs_func: 特征选择函数
-            model_cls: 模型类
-            param_grid: dict, 参数网格
-            top_ns: list, top_n列表
-            X_train, y_train: 训练集
-            X_val, y_val: 验证集
+            fs_func: Feature selection function
+            model_cls: Model class
+            param_grid: dict, parameter grid
+            top_ns: list, list of top_n
+            X_train, y_train: Training set
+            X_val, y_val: Validation set
         Returns:
-            DataFrame: 每组参数和top_n的val_auc/val_f1
+            DataFrame: val_auc/val_f1 for each parameter and top_n
         """
         import itertools
         import pandas as pd
@@ -875,14 +875,14 @@ class ModelTrainer:
 
     def evaluate_on_test_with_config(self, fs_func, model_cls, params, top_n, X_train, y_train, X_test, y_test):
         """
-        对指定特征选择方法、模型、top_n和参数，在test集上输出AUC/F1。
+        For the specified feature selection method, model, top_n, and parameters, output AUC/F1 on the test set.
         Args:
-            fs_func: 特征选择函数
-            model_cls: 模型类
-            params: dict, 模型参数
+            fs_func: Feature selection function
+            model_cls: Model class
+            params: dict, model parameters
             top_n: int
-            X_train, y_train: 训练集
-            X_test, y_test: 测试集
+            X_train, y_train: Training set
+            X_test, y_test: Test set
         Returns:
             dict: test_auc, test_f1
         """
@@ -898,15 +898,15 @@ class ModelTrainer:
 
     def param_search_on_fixed_features(self, feature_list, model_cls, param_grid, X_train, y_train, X_val, y_val):
         """
-        只在已选好的特征子集上循环参数组合，输出validation的AUC/F1。
+        Loop through parameter combinations only on the selected feature subset, outputting validation AUC/F1.
         Args:
-            feature_list: list, 已选好的特征名
-            model_cls: 模型类
-            param_grid: dict, 参数网格
-            X_train, y_train: 训练集
-            X_val, y_val: 验证集
+            feature_list: list, selected feature names
+            model_cls: Model class
+            param_grid: dict, parameter grid
+            X_train, y_train: Training set
+            X_val, y_val: Validation set
         Returns:
-            DataFrame: 每组参数的val_auc/val_f1
+            DataFrame: val_auc/val_f1 for each parameter
         """
         import itertools
         import pandas as pd
@@ -930,15 +930,15 @@ class ModelTrainer:
 
     def param_search_all_models_on_fixed_features(self, feature_list, model_classes, param_grids, X_train, y_train, X_val, y_val):
         """
-        对同一特征子集, 循环所有模型, 每个模型自动调参, 输出最优参数和分数.
+        For the same feature subset, loop through all models, automatically tune parameters for each model, and output the best parameters and scores.
         Args:
-            feature_list: list, 已选特征名
+            feature_list: list, selected feature names
             model_classes: dict, {model_name: model_cls}
             param_grids: dict, {model_name: param_grid}
-            X_train, y_train: 训练集
-            X_val, y_val: 验证集
+            X_train, y_train: Training set
+            X_val, y_val: Validation set
         Returns:
-            DataFrame: 每个模型的最优参数和val_auc/val_f1
+            DataFrame: best parameters and val_auc/val_f1 for each model
         """
         import pandas as pd
         results = []
@@ -956,49 +956,125 @@ class ModelTrainer:
 
     def batch_param_search_and_test(
         self, fs_name, top_ns, selected_features_dict, model_classes, param_grids,
-        X_train_balanced, y_train_balanced, X_val, y_val, X_test, y_test
+        X_train_balanced, y_train_balanced, X_val, y_val, X_test, y_test,
+        cv_folds: int = None  # New: cv_folds parameter
     ):
         """
-        批量对指定FS、top_ns、所有模型调参并在test集评估，返回所有validation和test最优结果DataFrame。
-        不保存Excel，Excel保存逻辑由外部控制。
+        Batch parameter tuning and test evaluation for all models for the specified FS and top_ns, returning all validation and test optimal result DataFrames.
+        Supports cross-validation mode.
+        
+        Args:
+            cv_folds: If set, use cross-validation; if None, use holdout validation
         """
         import pandas as pd
+        from sklearn.model_selection import GridSearchCV
+        
         all_val_results = []
         all_test_results = []
+        
         for top_n in top_ns:
-            feature_list = selected_features_dict[(top_n,fs_name )]
+            feature_list = selected_features_dict[(top_n, fs_name)]
+            
             for model_name, model_cls in model_classes.items():
                 param_grid = param_grids[model_name]
-                # 1. validation调参
-                val_results = self.param_search_on_fixed_features(
-                    feature_list, model_cls, param_grid,
-                    X_train_balanced, y_train_balanced, X_val, y_val
-                )
-                val_results['model'] = model_name
-                val_results['fs'] = fs_name
-                val_results['top_n'] = top_n
-                all_val_results.append(val_results)
+                
+                if cv_folds is not None:
+                    # 使用交叉验证模式
+                    print(f"Running GridSearchCV with cv={cv_folds} for {model_name}...")
+                    
+                    # 创建带random_state的模型实例
+                    if model_name == 'RandomForest':
+                        base_model = model_cls(random_state=self.random_state)
+                    elif model_name == 'LogisticRegression':
+                        base_model = model_cls(random_state=self.random_state)
+                    elif model_name == 'XGBoost':
+                        base_model = model_cls(random_state=self.random_state)
+                    else:
+                        base_model = model_cls()
+                    
+                    grid = GridSearchCV(
+                        estimator=base_model,
+                        param_grid=param_grid,
+                        scoring='roc_auc',
+                        cv=cv_folds,
+                        n_jobs=-1,
+                        return_train_score=False
+                    )
+                    
+                    # 在训练集上进行交叉验证
+                    grid.fit(X_train_balanced[feature_list], y_train_balanced)
+                    best_params = grid.best_params_
+                    cv_score = grid.best_score_
+                    
+                    # 验证集评估
+                    y_val_pred = grid.best_estimator_.predict(X_val[feature_list])
+                    y_val_prob = grid.best_estimator_.predict_proba(X_val[feature_list])[:, 1]
+                    val_auc = roc_auc_score(y_val, y_val_prob)
+                    val_f1 = f1_score(y_val, y_val_pred)
+                    
+                    # 测试集评估
+                    y_test_pred = grid.best_estimator_.predict(X_test[feature_list])
+                    y_test_prob = grid.best_estimator_.predict_proba(X_test[feature_list])[:, 1]
+                    test_auc = roc_auc_score(y_test, y_test_prob)
+                    test_f1 = f1_score(y_test, y_test_pred)
+                    
+                    # 保存验证结果
+                    val_result = {
+                        'model': model_name,
+                        'fs': fs_name,
+                        'top_n': top_n,
+                        **best_params,
+                        'val_auc': val_auc,
+                        'val_f1': val_f1,
+                        'cv_score': cv_score
+                    }
+                    all_val_results.append(val_result)
+                    
+                    # 保存测试结果
+                    test_result = {
+                        'model': model_name,
+                        'fs': fs_name,
+                        'top_n': top_n,
+                        **best_params,
+                        'test_auc': test_auc,
+                        'test_f1': test_f1,
+                        'cv_score': cv_score
+                    }
+                    all_test_results.append(test_result)
+                    
+                else:
+                    # 使用原有的holdout验证模式
+                    # 1. validation调参
+                    val_results = self.param_search_on_fixed_features(
+                        feature_list, model_cls, param_grid,
+                        X_train_balanced, y_train_balanced, X_val, y_val
+                    )
+                    val_results['model'] = model_name
+                    val_results['fs'] = fs_name
+                    val_results['top_n'] = top_n
+                    all_val_results.append(val_results)
 
-                # 2. 选最优参数
-                best_row = val_results.loc[val_results['val_auc'].idxmax()]
-                param_keys = list(param_grid.keys())
-                params = {k: best_row[k] for k in param_keys}
+                    # 2. 选最优参数
+                    best_row = val_results.loc[val_results['val_auc'].idxmax()]
+                    param_keys = list(param_grid.keys())
+                    params = {k: best_row[k] for k in param_keys}
 
-                # 3. test集评估
-                test_result = self.evaluate_on_test_with_config(
-                    lambda X, y, top_n: feature_list,
-                    model_cls, params, top_n,
-                    X_train_balanced, y_train_balanced, X_test, y_test
-                )
-                test_result.update({
-                    'model': model_name,
-                    'fs': fs_name,
-                    'top_n': top_n,
-                    **params,
-                    'val_auc': best_row['val_auc'],
-                    'val_f1': best_row['val_f1']
-                })
-                all_test_results.append(test_result)
+                    # 3. test集评估
+                    test_result = self.evaluate_on_test_with_config(
+                        lambda X, y, top_n: feature_list,
+                        model_cls, params, top_n,
+                        X_train_balanced, y_train_balanced, X_test, y_test
+                    )
+                    test_result.update({
+                        'model': model_name,
+                        'fs': fs_name,
+                        'top_n': top_n,
+                        **params,
+                        'val_auc': best_row['val_auc'],
+                        'val_f1': best_row['val_f1']
+                    })
+                    all_test_results.append(test_result)
+        
         all_val_results_df = pd.concat(all_val_results, ignore_index=True)
         all_test_results_df = pd.DataFrame(all_test_results)
         return all_val_results_df, all_test_results_df
@@ -1017,33 +1093,35 @@ class ModelTrainer:
         X_test: pd.DataFrame, 
         y_test: pd.Series,
         cv_folds: int = 3
-    ) -> Tuple[List[pd.DataFrame], List[pd.DataFrame], List[pd.DataFrame]]:
+    ) -> Tuple[List[pd.DataFrame], List[pd.DataFrame], List[pd.DataFrame], Dict[Tuple[str, str], Any]]:
         """
-        为所有特征选择方法执行GridSearchCV
+        Run GridSearchCV for all feature selection methods
         
         Args:
-            fs_names: 特征选择方法名称列表
-            top_n: 特征数量
-            selected_features_dict: 特征选择结果字典
-            model_classes: 模型类字典
-            param_grids: 参数网格字典
-            X_train_balanced: 平衡后的训练集特征
-            y_train_balanced: 平衡后的训练集标签
-            X_val: 验证集特征
-            y_val: 验证集标签
-            X_test: 测试集特征
-            y_test: 测试集标签
-            cv_folds: 交叉验证折数
+            fs_names: List of feature selection method names
+            top_n: Number of features
+            selected_features_dict: Feature selection result dictionary
+            model_classes: Model class dictionary
+            param_grids: Parameter grid dictionary
+            X_train_balanced: Balanced training set features
+            y_train_balanced: Balanced training set labels
+            X_val: Validation set features
+            y_val: Validation set labels
+            X_test: Test set features
+            y_test: Test set labels
+            cv_folds: Number of cross-validation folds
             
         Returns:
-            Tuple of (all_val_results, all_test_results, all_cv_results_list)
+            Tuple of (all_val_results, all_test_results, all_cv_results_list, best_models)
         """
         from sklearn.model_selection import GridSearchCV
         from sklearn.metrics import roc_auc_score, f1_score
+        import joblib
         
         all_val_results = []
         all_test_results = []
         all_cv_results_list = []
+        best_models = {}  # New: Save all best model objects
         
         for fs_name in fs_names:
             feature_list = selected_features_dict[(top_n, fs_name)]
@@ -1075,9 +1153,15 @@ class ModelTrainer:
                 
                 grid.fit(X_train_balanced[feature_list], y_train_balanced)
                 best_params = grid.best_params_
-                print("Best params:", best_params)
                 
-                # 保存所有CV结果
+                # New: Save best model object to dictionary
+                best_models[(fs_name, model_name)] = grid.best_estimator_
+                # New: Save best model to disk
+                model_filename = f'best_model_{fs_name}_{model_name}.pkl'
+                joblib.dump(grid.best_estimator_, model_filename)
+                print(f"Best model saved to {model_filename}")
+                
+                # Save all CV results
                 all_cv_results = pd.DataFrame(grid.cv_results_)
                 all_cv_results['model'] = model_name
                 all_cv_results['fs'] = fs_name
@@ -1089,14 +1173,21 @@ class ModelTrainer:
                 y_val_prob = grid.best_estimator_.predict_proba(X_val[feature_list])[:, 1]
                 val_auc = roc_auc_score(y_val, y_val_prob)
                 val_f1 = f1_score(y_val, y_val_pred)
-                
+                # New: Save n_iter
+                n_iter = None
+                if hasattr(grid.best_estimator_, 'n_iter_'):
+                    n_iter = grid.best_estimator_.n_iter_
+                    # Compatible with multi-class cases
+                    if hasattr(n_iter, '__len__') and not isinstance(n_iter, str):
+                        n_iter = n_iter[0]
                 val_results.append({
                     'model': model_name,
                     'fs': fs_name,
                     'top_n': top_n,
                     **best_params,
                     'val_auc': val_auc,
-                    'val_f1': val_f1
+                    'val_f1': val_f1,
+                    'n_iter': n_iter
                 })
                 
                 # 测试集评估
@@ -1104,29 +1195,140 @@ class ModelTrainer:
                 y_test_prob = grid.best_estimator_.predict_proba(X_test[feature_list])[:, 1]
                 test_auc = roc_auc_score(y_test, y_test_prob)
                 test_f1 = f1_score(y_test, y_test_pred)
-                
+                # New: Save n_iter
                 test_results.append({
                     'model': model_name,
                     'fs': fs_name,
                     'top_n': top_n,
                     **best_params,
                     'test_auc': test_auc,
-                    'test_f1': test_f1
+                    'test_f1': test_f1,
+                    'n_iter': n_iter
                 })
             
-            # 转换为DataFrame
+            # Convert to DataFrame
             val_df = pd.DataFrame(val_results)
             test_df = pd.DataFrame(test_results)
             all_cv_results_df = pd.concat(cv_results_list, ignore_index=True)
             
-            # 添加到总结果列表
+            # Add to total result list
             all_val_results.append(val_df)
             all_test_results.append(test_df)
             all_cv_results_list.append(all_cv_results_df)
             
             print(f"{fs_name} GridSearchCV completed")
         
-        return all_val_results, all_test_results, all_cv_results_list
+        # New: Return best_models
+        return all_val_results, all_test_results, all_cv_results_list, best_models
+        
+
+    def compare_parameter_settings(self, X_train: pd.DataFrame, y_train: pd.Series, 
+                                 X_test: pd.DataFrame, y_test: pd.Series,
+                                 default_results: pd.DataFrame,
+                                 tuned_results: pd.DataFrame) -> None:
+        """
+        Compares model performance between default and tuned parameters
+        
+        Args:
+            X_train, y_train: Training data
+            X_test, y_test: Test data
+            default_results: Results from default parameters
+            tuned_results: Results from tuned parameters
+        """
+        print("=" * 60)
+        print("PARAMETER SETTING COMPARISON")
+        print("=" * 60)
+        
+        # Merge results for comparison
+        comparison_data = []
+        
+        # Add default parameter results
+        for _, row in default_results.iterrows():
+            comparison_data.append({
+                'Model': row['model_name'],
+                'FS_Method': row.get('feature_method', 'default'),
+                'Top_N': row.get('top_n', 'default'),
+                'Parameter_Setting': 'Default',
+                'CV_AUC': row.get('cv_auc', 0),
+                'CV_F1': row.get('cv_f1', 0),
+                'Test_AUC': row.get('test_auc', 0),
+                'Test_F1': row.get('test_f1', 0)
+            })
+        
+        # Add tuned parameter results
+        for _, row in tuned_results.iterrows():
+            comparison_data.append({
+                'Model': row['model_name'],
+                'FS_Method': row.get('feature_method', 'default'),
+                'Top_N': row.get('top_n', 'default'),
+                'Parameter_Setting': 'Tuned',
+                'CV_AUC': row.get('cv_auc', 0),
+                'CV_F1': row.get('cv_f1', 0),
+                'Test_AUC': row.get('test_auc', 0),
+                'Test_F1': row.get('test_f1', 0)
+            })
+        
+        comparison_df = pd.DataFrame(comparison_data)
+        
+        # Display comparison results
+        print("\n📊 Performance Comparison:")
+        with pd.option_context('display.max_rows', None, 'display.max_columns', None):
+            display(comparison_df)
+        
+        # Calculate performance changes
+        print("\n📈 Performance Changes (Tuned - Default):")
+        for metric in ['CV_AUC', 'CV_F1', 'Test_AUC', 'Test_F1']:
+            default_avg = comparison_df[comparison_df['Parameter_Setting'] == 'Default'][metric].mean()
+            tuned_avg = comparison_df[comparison_df['Parameter_Setting'] == 'Tuned'][metric].mean()
+            change = tuned_avg - default_avg
+            change_pct = (change / default_avg) * 100 if default_avg != 0 else 0
+            
+            print(f"{metric}: {change:+.3f} ({change_pct:+.1f}%)")
+        
+        # Visualize comparison
+        if _PLOTTING_ENABLED:
+            self._plot_parameter_comparison(comparison_df)
+        
+        return comparison_df
+
+    def _plot_parameter_comparison(self, comparison_df: pd.DataFrame) -> None:
+        """Plot parameter comparison results"""
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+        
+        fig, axes = plt.subplots(2, 2, figsize=(15, 10))
+        metrics = ['CV_AUC', 'CV_F1', 'Test_AUC', 'Test_F1']
+        
+        for i, metric in enumerate(metrics):
+            ax = axes[i//2, i%2]
+            
+            # Create comparison plot
+            pivot_data = comparison_df.pivot_table(
+                index=['Model', 'FS_Method', 'Top_N'],
+                columns='Parameter_Setting',
+                values=metric,
+                aggfunc='mean'
+            )
+            
+            # Calculate differences
+            if 'Default' in pivot_data.columns and 'Tuned' in pivot_data.columns:
+                pivot_data['Difference'] = pivot_data['Tuned'] - pivot_data['Default']
+                
+                # Plot difference distribution
+                pivot_data['Difference'].hist(ax=ax, bins=20, alpha=0.7)
+                ax.axvline(x=0, color='red', linestyle='--', alpha=0.7)
+                ax.set_title(f'{metric} Difference Distribution')
+                ax.set_xlabel('Tuned - Default')
+                ax.set_ylabel('Frequency')
+                
+                # Add statistics
+                mean_diff = pivot_data['Difference'].mean()
+                ax.text(0.05, 0.95, f'Mean: {mean_diff:.3f}', 
+                       transform=ax.transAxes, verticalalignment='top',
+                       bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+        
+        plt.tight_layout()
+        plt.show()
 
 def main():
     """Main function to demonstrate the ModelTrainer class"""

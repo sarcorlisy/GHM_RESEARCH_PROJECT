@@ -365,7 +365,7 @@ class FeatureSelector:
         results_df = pd.DataFrame(table_data)
         
         print("\n📊 Multiple Top N Value Feature Selection Detailed Results:")
-        with pd.option_context('display.max_colwidth', 100):
+        with pd.option_context('display.max_colwidth', None, 'display.max_columns', None, 'display.width', None):
             display(results_df)
         
         # Create common feature summary table
@@ -388,7 +388,7 @@ class FeatureSelector:
         common_features_df = pd.DataFrame(common_features_data)
         
         print("\n🔍 Common Features Summary by Top N Value:")
-        with pd.option_context('display.max_colwidth', 100):
+        with pd.option_context('display.max_colwidth', None, 'display.max_columns', None, 'display.width', None):
             display(common_features_df)
 
     def plot_feature_selection_matrix(self, multiple_results: Dict[int, Dict[str, List[str]]], save_path: str = None) -> None:
@@ -437,9 +437,125 @@ class FeatureSelector:
             logger.info(f"Feature selection matrix plot saved to: {save_path}")
         plt.show()
 
+    def display_feature_selection_summary_table(self, multiple_results: Dict[int, Dict[str, List[str]]]) -> None:
+        """
+        Displays a summary table showing all features and their selection status across different Top N values
+        
+        Args:
+            multiple_results: Return result of select_features_multiple_topn
+        """
+        try:
+            from IPython.display import display
+            import pandas as pd
+        except ImportError:
+            logger.warning("IPython or pandas not found. Displaying as plain text.")
+            display = print
+
+        # 收集所有特征
+        all_features = set()
+        for top_n, methods in multiple_results.items():
+            for method, features in methods.items():
+                all_features.update(features)
+        
+        all_features = sorted(list(all_features))
+        
+        # 创建汇总表格
+        summary_data = []
+        for feature in all_features:
+            row = {'Feature': feature}
+            for top_n in sorted(multiple_results.keys()):
+                # 检查该特征在任意方法下是否被选中
+                is_selected = any(feature in methods[method] for method in methods)
+                row[f'Top N={top_n}'] = 1 if is_selected else 0
+            summary_data.append(row)
+        
+        summary_df = pd.DataFrame(summary_data)
+        
+        print("\n📋 Feature Selection Summary Table (All Features)")
+        print("=" * 60)
+        print("1 = Selected in at least one method for this Top N")
+        print("0 = Not selected for this Top N")
+        print("=" * 60)
+        
+        with pd.option_context('display.max_colwidth', None, 'display.max_columns', None, 'display.width', None):
+            display(summary_df)
+        
+        # 统计信息
+        print(f"\n📊 Summary Statistics:")
+        print(f"Total unique features: {len(all_features)}")
+        for top_n in sorted(multiple_results.keys()):
+            selected_count = summary_df[f'Top N={top_n}'].sum()
+            print(f"Features selected in Top N={top_n}: {selected_count} ({selected_count/len(all_features)*100:.1f}%)")
+        
+        return summary_df
+
+    def display_detailed_feature_selection_table(self, multiple_results: Dict[int, Dict[str, List[str]]]) -> None:
+        """
+        Displays a detailed table showing all features and their selection status by method and Top N values
+        
+        Args:
+            multiple_results: Return result of select_features_multiple_topn
+        """
+        try:
+            from IPython.display import display
+            import pandas as pd
+        except ImportError:
+            logger.warning("IPython or pandas not found. Displaying as plain text.")
+            display = print
+
+        # 收集所有特征
+        all_features = set()
+        for top_n, methods in multiple_results.items():
+            for method, features in methods.items():
+                all_features.update(features)
+        
+        all_features = sorted(list(all_features))
+        
+        # 获取所有方法名
+        all_methods = set()
+        for top_n, methods in multiple_results.items():
+            all_methods.update(methods.keys())
+        all_methods = sorted(list(all_methods))
+        
+        # 创建详细表格
+        detailed_data = []
+        for feature in all_features:
+            row = {'Feature': feature}
+            for top_n in sorted(multiple_results.keys()):
+                for method in all_methods:
+                    if method in multiple_results[top_n]:
+                        is_selected = feature in multiple_results[top_n][method]
+                        row[f'Top{top_n}_{method}'] = 1 if is_selected else 0
+            detailed_data.append(row)
+        
+        detailed_df = pd.DataFrame(detailed_data)
+        
+        print("\n📋 Detailed Feature Selection Table (By Method)")
+        print("=" * 80)
+        print("1 = Selected by this method for this Top N")
+        print("0 = Not selected by this method for this Top N")
+        print("=" * 80)
+        
+        with pd.option_context('display.max_colwidth', None, 'display.max_columns', None, 'display.width', None):
+            display(detailed_df)
+        
+        # 统计信息
+        print(f"\n📊 Detailed Statistics:")
+        print(f"Total unique features: {len(all_features)}")
+        print(f"Feature selection methods: {', '.join(all_methods)}")
+        
+        for top_n in sorted(multiple_results.keys()):
+            print(f"\nTop N={top_n}:")
+            for method in all_methods:
+                if method in multiple_results[top_n]:
+                    selected_count = detailed_df[f'Top{top_n}_{method}'].sum()
+                    print(f"  {method}: {selected_count} features ({selected_count/len(all_features)*100:.1f}%)")
+        
+        return detailed_df
+
 def flatten_multiple_results(multiple_results):
     """
-    将select_features_multiple_topn的输出扁平化为{(fs_name, top_n): feature_list}结构。
+    Flatten the output of select_features_multiple_topn into a structure of {(fs_name, top_n): feature_list}.
     Args:
         multiple_results: dict, {fs_name: {top_n: [features...]}}
     Returns:
@@ -452,11 +568,11 @@ def flatten_multiple_results(multiple_results):
     return selected_features_dict
 
 def main():
-    """主函数，用于测试特征选择功能"""
+    """Main function for testing feature selection functionality"""
     from data_loader import DataLoader
     from data_preprocessor import DataPreprocessor
     
-    # 加载和预处理数据
+    # Load and preprocess data
     loader = DataLoader()
     df = loader.merge_data()
     
@@ -469,35 +585,35 @@ def main():
     X_train, X_val, X_test = preprocessor.scale_numerical_features(X_train, X_val, X_test)
     X_train_balanced, y_train_balanced = preprocessor.apply_smote(X_train, y_train)
     
-    # 初始化特征选择器
+    # Initialize feature selector
     feature_selector = FeatureSelector()
     
-    # 使用所有方法选择特征
+    # Select features using all methods
     selected_features = feature_selector.select_all_features(X_train_balanced, y_train_balanced, top_n=15)
     
-    # 打印结果
+    # Print results
     for method, features in selected_features.items():
         print(f"\n{method} selected features:")
         for feature in features:
             print(f"  - {feature}")
     
-    # 获取共同特征
+    # Get common features
     common_features = feature_selector.get_common_features(min_methods=2)
     print(f"\nCommon features selected by at least 2 methods: {common_features}")
     
-    # 保存结果
+    # Save results
     feature_selector.save_selected_features()
     
-    # 绘制特征重要性
+    # Plot feature importance
     feature_selector.plot_feature_importance(save_path="outputs/feature_importance.png")
     
-    # 使用多个top_n值运行所有特征选择方法
+    # Run all feature selection methods with multiple top_n values
     multiple_results = feature_selector.select_features_multiple_topn(X_train_balanced, y_train_balanced, [5, 10, 15])
     
-    # 绘制多个top_n值的结果
+    # Plot results for multiple top_n values
     feature_selector.display_multiple_topn_results(multiple_results)
 
-    # 可视化特征选择矩阵
+    # Visualize feature selection matrix
     feature_selector.plot_feature_selection_matrix(multiple_results, save_path='outputs/feature_selection_matrix.png')
 
     return selected_features

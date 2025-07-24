@@ -281,28 +281,28 @@ class DataPreprocessor:
                    test_size: float = 0.2, val_size: float = 0.2, 
                    random_state: int = 42) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.Series, pd.Series, pd.Series]:
         """
-        分割数据集，并在分割前删除无用的ID列。
+        Split the dataset and remove unused ID columns before splitting.
 
         Args:
-            df: 输入数据框
-            target_col: 目标变量列名
-            test_size: 测试集比例
-            val_size: 验证集比例
-            random_state: 随机种子
+            df: Input DataFrame
+            target_col: Target variable column name
+            test_size: Test set proportion
+            val_size: Validation set proportion
+            random_state: Random seed
 
         Returns:
-            训练集、验证集、测试集的特征和目标变量
+            Features and target variables for train, validation, and test sets
         """
         logger.info("Splitting data into train/validation/test sets...")
 
-        # 1. 定义并删除对模型训练无用的ID列
+        # 1. Define and remove ID columns that are not useful for model training
         cols_to_drop = [
             'encounter_id', 'patient_nbr', 
             'admission_type_id', 'discharge_disposition_id', 'admission_source_id',
-            'readmitted'  # 原始目标变量，已被二进制版本替代
+            'readmitted'  # Original target variable, replaced by binary version
         ]
         
-        # 筛选出实际存在于DataFrame中的列进行删除
+        # Select columns that actually exist in the DataFrame for removal
         existing_cols_to_drop = [col for col in cols_to_drop if col in df.columns]
         if existing_cols_to_drop:
             logger.info(f"Dropping unused ID and target columns before splitting: {existing_cols_to_drop}")
@@ -312,12 +312,12 @@ class DataPreprocessor:
 
         y = df[target_col]
 
-        # 2. 首先分割出测试集
+        # 2. First split out the test set
         X_temp, X_test, y_temp, y_test = train_test_split(
             X, y, test_size=test_size, random_state=random_state, stratify=y
         )
 
-        # 3. 从剩余数据中分割出验证集
+        # 3. Split out the validation set from the remaining data
         X_train, X_val, y_train, y_val = train_test_split(
             X_temp, y_temp, test_size=val_size, random_state=random_state, stratify=y_temp
         )
@@ -329,16 +329,16 @@ class DataPreprocessor:
     def encode_categorical_features(self, X_train: pd.DataFrame, X_val: pd.DataFrame, 
                                   X_test: pd.DataFrame, encoding_method: str = 'label') -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
-        编码分类特征
+        Encode categorical features
         
         Args:
-            X_train: 训练集特征
-            X_val: 验证集特征
-            X_test: 测试集特征
-            encoding_method: 编码方法 ('label' 或 'onehot')
+            X_train: Training set features
+            X_val: Validation set features
+            X_test: Test set features
+            encoding_method: Encoding method ('label' or 'onehot')
             
         Returns:
-            编码后的特征集
+            Encoded feature sets
         """
         logger.info(f"Encoding categorical features using {encoding_method} encoding...")
         
@@ -383,15 +383,15 @@ class DataPreprocessor:
     def scale_numerical_features(self, X_train: pd.DataFrame, X_val: pd.DataFrame, 
                                 X_test: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
-        标准化数值特征
+        Standardize numerical features
         
         Args:
-            X_train: 训练集特征
-            X_val: 验证集特征
-            X_test: 测试集特征
+            X_train: Training set features
+            X_val: Validation set features
+            X_test: Test set features
             
         Returns:
-            标准化后的特征集
+            Standardized feature sets
         """
         logger.info("Scaling numerical features...")
         
@@ -410,15 +410,15 @@ class DataPreprocessor:
     def apply_smote(self, X_train: pd.DataFrame, y_train: pd.Series, 
                    random_state: int = 42) -> Tuple[pd.DataFrame, pd.Series]:
         """
-        应用SMOTE来平衡训练数据集。
+        Apply SMOTE to balance the training dataset.
 
         Args:
-            X_train: 训练集特征
-            y_train: 训练集标签
-            random_state: 随机种子
+            X_train: Training set features
+            y_train: Training set labels
+            random_state: Random seed
 
         Returns:
-            平衡后的训练集特征和标签
+            Balanced training set features and labels
         """
         logger.info("Applying SMOTE for class balancing...")
         
@@ -432,10 +432,10 @@ class DataPreprocessor:
     
     def get_feature_categories(self) -> Dict[str, List[str]]:
         """
-        获取特征分类信息
+        Get feature category information
         
         Returns:
-            特征分类字典
+            Feature category dictionary
         """
         return FEATURE_CATEGORIES
     
@@ -443,16 +443,16 @@ class DataPreprocessor:
                              X_test: pd.DataFrame, y_train: pd.Series, y_val: pd.Series, 
                              y_test: pd.Series, output_dir: str = 'outputs') -> None:
         """
-        保存预处理后的数据
+        Save preprocessed data
         
         Args:
-            X_train: 训练集特征
-            X_val: 验证集特征
-            X_test: 测试集特征
-            y_train: 训练集目标变量
-            y_val: 验证集目标变量
-            y_test: 测试集目标变量
-            output_dir: 输出目录
+            X_train: Training set features
+            X_val: Validation set features
+            X_test: Test set features
+            y_train: Training set target variable
+            y_val: Validation set target variable
+            y_test: Test set target variable
+            output_dir: Output directory
         """
         logger.info("Saving preprocessed data...")
         
@@ -471,35 +471,35 @@ class DataPreprocessor:
         logger.info(f"Preprocessed data saved to {output_dir}")
 
 def main():
-    """主函数，用于测试数据预处理功能"""
+    """Main function for testing data preprocessing functionality"""
     from data_loader import DataLoader
     
-    # 加载数据
+    # Load data
     loader = DataLoader()
     df = loader.merge_data()
     
-    # 初始化预处理器
+    # Initialize preprocessor
     preprocessor = DataPreprocessor()
     
-    # 应用特征工程
+    # Apply feature engineering
     df = preprocessor.apply_feature_engineering(df)
     
-    # 准备目标变量
+    # Prepare target variable
     df = preprocessor.prepare_target_variable(df)
     
-    # 分割数据
+    # Split data
     X_train, X_val, X_test, y_train, y_val, y_test = preprocessor.split_data(df)
     
-    # 编码分类特征
+    # Encode categorical features
     X_train, X_val, X_test = preprocessor.encode_categorical_features(X_train, X_val, X_test)
     
-    # 标准化数值特征
+    # Standardize numerical features
     X_train, X_val, X_test = preprocessor.scale_numerical_features(X_train, X_val, X_test)
     
-    # 应用SMOTE
+    # Apply SMOTE
     X_train_balanced, y_train_balanced = preprocessor.apply_smote(X_train, y_train)
     
-    # 保存预处理后的数据
+    # Save preprocessed data
     preprocessor.save_preprocessed_data(X_train_balanced, X_val, X_test, 
                                       y_train_balanced, y_val, y_test)
     

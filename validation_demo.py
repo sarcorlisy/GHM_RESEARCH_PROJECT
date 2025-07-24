@@ -1,5 +1,5 @@
 """
-Validation Demo - 展示完整的验证流程
+Validation Demo - Demonstrates the complete validation process
 """
 import pandas as pd
 import numpy as np
@@ -15,11 +15,11 @@ logger = logging.getLogger(__name__)
 
 def get_selected_features_dict(feature_selectors, X_train, y_train, top_n_list):
     """
-    生成所有特征选择方法和top_n组合的特征子集字典。
+    Generate a dictionary of feature subsets for all feature selection methods and top_n combinations.
     Args:
-        feature_selectors: dict, 特征选择方法名到函数的映射
-        X_train, y_train: 训练集
-        top_n_list: list, top_n的取值
+        feature_selectors: dict, mapping from feature selection method name to function
+        X_train, y_train: Training set
+        top_n_list: list, values of top_n
     Returns:
         dict: (fs_name, top_n) -> feature_list
     """
@@ -32,103 +32,103 @@ def get_selected_features_dict(feature_selectors, X_train, y_train, top_n_list):
 
 def run_validation_demo():
     """
-    运行完整的validation demo
+    Run the complete validation demo
     """
     logger.info("=" * 60)
-    logger.info("VALIDATION DEMO - 医院再入院预测验证流程")
+    logger.info("VALIDATION DEMO - Hospital Readmission Prediction Validation Process")
     logger.info("=" * 60)
     
-    # 1. 数据加载
-    logger.info("\n1. 数据加载...")
+    # 1. Data loading
+    logger.info("\n1. Data loading...")
     loader = DataLoader()
     df = loader.merge_data()
-    logger.info(f"原始数据形状: {df.shape}")
+    logger.info(f"Original data shape: {df.shape}")
     
-    # 2. 数据预处理
-    logger.info("\n2. 数据预处理...")
+    # 2. Data preprocessing
+    logger.info("\n2. Data preprocessing...")
     preprocessor = DataPreprocessor()
     
-    # 特征工程
+    # Feature engineering
     df = preprocessor.apply_feature_engineering(df)
-    logger.info(f"特征工程后数据形状: {df.shape}")
+    logger.info(f"Data shape after feature engineering: {df.shape}")
     
-    # 准备目标变量
+    # Prepare target variable
     df = preprocessor.prepare_target_variable(df)
-    logger.info(f"目标变量分布:\n{df['readmitted_binary'].value_counts()}")
+    logger.info(f"Target variable distribution:\n{df['readmitted_binary'].value_counts()}")
     
-    # 数据分割 (Train/Validation/Test)
+    # Data splitting (Train/Validation/Test)
     X_train, X_val, X_test, y_train, y_val, y_test = preprocessor.split_data(
         df, target_col='readmitted_binary', test_size=0.2, val_size=0.2, random_state=42
     )
     
-    logger.info(f"数据分割结果:")
-    logger.info(f"  训练集: {X_train.shape}")
-    logger.info(f"  验证集: {X_val.shape}")
-    logger.info(f"  测试集: {X_test.shape}")
+    logger.info(f"Data split results:")
+    logger.info(f"  Train set: {X_train.shape}")
+    logger.info(f"  Validation set: {X_val.shape}")
+    logger.info(f"  Test set: {X_test.shape}")
     
-    # 特征编码
+    # Feature encoding
     X_train, X_val, X_test = preprocessor.encode_categorical_features(
         X_train, X_val, X_test, encoding_method='label'
     )
     
-    # 特征标准化
+    # Feature standardization
     X_train, X_val, X_test = preprocessor.scale_numerical_features(X_train, X_val, X_test)
     
-    # SMOTE平衡
+    # SMOTE balancing
     X_train_balanced, y_train_balanced = preprocessor.apply_smote(X_train, y_train)
-    logger.info(f"SMOTE平衡后训练集形状: {X_train_balanced.shape}")
+    logger.info(f"Training set shape after SMOTE balancing: {X_train_balanced.shape}")
     
-    # 3. 特征选择
-    logger.info("\n3. 特征选择...")
+    # 3. Feature selection
+    logger.info("\n3. Feature selection...")
     feature_selector = FeatureSelector()
     feature_selectors = feature_selector.get_feature_selectors()
     top_n_list = [5, 10, 15]
 
-    # 新增：保存所有方法和top_n的特征子集
+    # New: Save feature subsets for all methods and top_n
     selected_features_dict = get_selected_features_dict(feature_selectors, X_train_balanced, y_train_balanced, top_n_list)
-    logger.info(f"已保存所有特征选择方法和top_n组合的特征子集，共{len(selected_features_dict)}组")
+    logger.info(f"Saved all feature subsets for feature selection methods and top_n combinations, total {len(selected_features_dict)} groups")
     
-    # 4. 模型训练和验证
-    logger.info("\n4. 模型训练和验证...")
+    # 4. Model training and validation
+    logger.info("\n4. Model training and validation...")
     model_trainer = ModelTrainer(random_state=42)
     
-    # 使用最佳特征集进行训练
+    # Train using the best feature set
     best_features = selected_features_dict[('MutualInfo', 10)]
-    logger.info(f"使用 MutualInfo 选择的 {len(best_features)} 个特征")
+    logger.info(f"Using {len(best_features)} features selected by MutualInfo")
     
     X_train_selected = X_train_balanced[best_features]
     X_val_selected = X_val[best_features]
     X_test_selected = X_test[best_features]
     
-    # 训练所有模型
+    # Train all models
     training_results = model_trainer.train_all_models(
         X_train_selected, y_train_balanced, X_val_selected, y_val
     )
     
-    logger.info("\n训练结果 (Cross-Validation):")
+    logger.info("\nTraining results (Cross-Validation):")
     logger.info(training_results.to_string())
     
-    # 5. 验证集评估
-    logger.info("\n5. 验证集评估...")
+    # 5. Validation set evaluation
+    logger.info("\n5. Validation set evaluation...")
     validation_results = model_trainer.evaluate_on_validation_set(X_val_selected, y_val)
     
-    logger.info("验证集结果:")
+    logger.info("Validation set results:")
     logger.info(validation_results.to_string())
     
-    # 6. 测试集评估
-    logger.info("\n6. 测试集评估...")
+    # 6. Test set evaluation
+    logger.info("\n6. Test set evaluation...")
     test_results = model_trainer.evaluate_on_test_set(X_test_selected, y_test)
     
-    logger.info("测试集结果:")
+    logger.info("Test set results:")
     logger.info(test_results.to_string())
     
-    # 7. 结果比较
-    logger.info("\n7. 结果比较...")
+    # 7. Results comparison
+    logger.info("\n7. Results comparison...")
     logger.info("=" * 80)
-    logger.info("模型性能比较 (CV vs Validation vs Test)")
+    logger.info("Model performance comparison (CV vs Validation vs Test)")
     logger.info("=" * 80)
     
-    # 合并结果进行比较
+    # Merge results for comparison
     comparison_df = pd.merge(
         training_results[['model_name', 'cv_auc', 'cv_f1']], 
         validation_results[['model_name', 'auc', 'f1']], 
@@ -143,40 +143,40 @@ def run_validation_demo():
     
     logger.info(comparison_df.to_string(index=False))
     
-    # 8. 找出最佳模型
-    logger.info("\n8. 最佳模型分析...")
+    # 8. Find the best model
+    logger.info("\n8. Best model analysis...")
     
-    # 按验证集AUC选择最佳模型
+    # Select the best model by validation set AUC
     best_val_model = validation_results.loc[validation_results['auc'].idxmax()]
-    logger.info(f"验证集最佳模型 (AUC): {best_val_model['model_name']} (AUC: {best_val_model['auc']:.3f})")
+    logger.info(f"Best model on validation set (AUC): {best_val_model['model_name']} (AUC: {best_val_model['auc']:.3f})")
     
-    # 按验证集F1选择最佳模型
+    # Select the best model by validation set F1
     best_val_f1_model = validation_results.loc[validation_results['f1'].idxmax()]
-    logger.info(f"验证集最佳模型 (F1): {best_val_f1_model['model_name']} (F1: {best_val_f1_model['f1']:.3f})")
+    logger.info(f"Best model on validation set (F1): {best_val_f1_model['model_name']} (F1: {best_val_f1_model['f1']:.3f})")
     
-    # 检查过拟合
-    logger.info("\n9. 过拟合检查...")
+    # Overfitting check
+    logger.info("\n9. Overfitting check...")
     for _, row in comparison_df.iterrows():
         model_name = row['model_name']
         cv_auc = row['cv_auc']
         val_auc = row['auc_val']
         test_auc = row['auc_test']
         
-        # 检查验证集和测试集的性能差异
+        # Check performance difference between validation and test sets
         val_test_diff = abs(val_auc - test_auc)
         cv_val_diff = abs(cv_auc - val_auc)
         
         logger.info(f"{model_name}:")
         logger.info(f"  CV AUC: {cv_auc:.3f}, Val AUC: {val_auc:.3f}, Test AUC: {test_auc:.3f}")
-        logger.info(f"  CV-Val差异: {cv_val_diff:.3f}, Val-Test差异: {val_test_diff:.3f}")
+        logger.info(f"  CV-Val difference: {cv_val_diff:.3f}, Val-Test difference: {val_test_diff:.3f}")
         
         if val_test_diff > 0.05:
-            logger.warning(f"  ⚠️  {model_name} 可能存在过拟合 (Val-Test差异: {val_test_diff:.3f})")
+            logger.warning(f"  ⚠️  {model_name} may be overfitting (Val-Test difference: {val_test_diff:.3f})")
         else:
-            logger.info(f"  ✅ {model_name} 泛化性能良好")
+            logger.info(f"  ✅ {model_name} has good generalization performance")
     
     logger.info("\n" + "=" * 60)
-    logger.info("VALIDATION DEMO 完成!")
+    logger.info("VALIDATION DEMO COMPLETED!")
     logger.info("=" * 60)
     
     return {

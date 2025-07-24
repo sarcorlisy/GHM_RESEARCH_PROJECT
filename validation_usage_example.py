@@ -1,5 +1,5 @@
 """
-Validation使用示例 - 展示在demo中的具体调用位置
+Validation Usage Example - Demonstrates the specific usage location in the demo
 """
 import pandas as pd
 import numpy as np
@@ -14,16 +14,16 @@ logger = logging.getLogger(__name__)
 
 def validation_usage_demo():
     """
-    展示validation在demo中的具体使用
+    Demonstrate the specific usage of validation in the demo
     """
     logger.info("=" * 60)
-    logger.info("VALIDATION使用示例")
+    logger.info("VALIDATION USAGE EXAMPLE")
     logger.info("=" * 60)
     
-    # ==================== 第一步：数据分割 ====================
-    logger.info("\n📊 第一步：数据分割 (Train/Validation/Test)")
+    # ==================== Step 1: Data Splitting ====================
+    logger.info("\n📊 Step 1: Data Splitting (Train/Validation/Test)")
     
-    # 加载和预处理数据
+    # Load and preprocess data
     loader = DataLoader()
     df = loader.merge_data()
     
@@ -31,98 +31,98 @@ def validation_usage_demo():
     df = preprocessor.apply_feature_engineering(df)
     df = preprocessor.prepare_target_variable(df)
     
-    # 🔑 关键：三路数据分割
+    # 🔑 Key: Three-way data split
     X_train, X_val, X_test, y_train, y_val, y_test = preprocessor.split_data(
         df, target_col='readmitted_binary', 
-        test_size=0.2,  # 20% 测试集
-        val_size=0.2,   # 20% 验证集 (从剩余80%中取20%，即总数据的16%)
+        test_size=0.2,  # 20% test set
+        val_size=0.2,   # 20% validation set (from remaining 80%, i.e., 16% of total)
         random_state=42
     )
     
-    logger.info(f"数据分割结果:")
-    logger.info(f"  训练集: {X_train.shape} ({len(X_train)/len(df)*100:.1f}%)")
-    logger.info(f"  验证集: {X_val.shape} ({len(X_val)/len(df)*100:.1f}%)")
-    logger.info(f"  测试集: {X_test.shape} ({len(X_test)/len(df)*100:.1f}%)")
+    logger.info(f"Data split results:")
+    logger.info(f"  Train set: {X_train.shape} ({len(X_train)/len(df)*100:.1f}%)")
+    logger.info(f"  Validation set: {X_val.shape} ({len(X_val)/len(df)*100:.1f}%)")
+    logger.info(f"  Test set: {X_test.shape} ({len(X_test)/len(df)*100:.1f}%)")
     
-    # 继续预处理
+    # Continue preprocessing
     X_train, X_val, X_test = preprocessor.encode_categorical_features(X_train, X_val, X_test)
     X_train, X_val, X_test = preprocessor.scale_numerical_features(X_train, X_val, X_test)
     X_train_balanced, y_train_balanced = preprocessor.apply_smote(X_train, y_train)
     
-    # ==================== 第二步：特征选择 ====================
-    logger.info("\n🔍 第二步：特征选择 (使用训练集)")
+    # ==================== Step 2: Feature Selection ====================
+    logger.info("\n🔍 Step 2: Feature Selection (using training set)")
     
     feature_selector = FeatureSelector()
     
-    # 只在训练集上进行特征选择
+    # Feature selection only on training set
     selected_features = feature_selector.select_features_mutual_info(
         X_train_balanced, y_train_balanced, top_n=20
     )
     
-    logger.info(f"选择了 {len(selected_features)} 个特征")
+    logger.info(f"Selected {len(selected_features)} features")
     
-    # 应用特征选择到所有数据集
+    # Apply feature selection to all datasets
     X_train_selected = X_train_balanced[selected_features]
-    X_val_selected = X_val[selected_features]      # 🔑 验证集使用相同特征
-    X_test_selected = X_test[selected_features]    # 🔑 测试集使用相同特征
+    X_val_selected = X_val[selected_features]      # 🔑 Validation set uses same features
+    X_test_selected = X_test[selected_features]    # 🔑 Test set uses same features
     
-    # ==================== 第三步：模型训练 ====================
-    logger.info("\n🤖 第三步：模型训练 (在训练集上)")
+    # ==================== Step 3: Model Training ====================
+    logger.info("\n🤖 Step 3: Model Training (on training set)")
     
     model_trainer = ModelTrainer(random_state=42)
     
-    # 在训练集上训练模型
+    # Train models on training set
     training_results = model_trainer.train_all_models(
         X_train_selected, y_train_balanced, 
-        X_val_selected, y_val  # 🔑 传入验证集用于概率分布图
+        X_val_selected, y_val  # 🔑 Pass validation set for probability plot
     )
     
-    logger.info("训练结果 (Cross-Validation):")
+    logger.info("Training results (Cross-Validation):")
     logger.info(training_results.to_string())
     
-    # ==================== 第四步：验证集评估 ====================
-    logger.info("\n✅ 第四步：验证集评估 (模型选择)")
+    # ==================== Step 4: Validation Set Evaluation ====================
+    logger.info("\n✅ Step 4: Validation Set Evaluation (Model Selection)")
     
-    # 🔑 关键：在验证集上评估所有模型
+    # 🔑 Key: Evaluate all models on validation set
     validation_results = model_trainer.evaluate_on_validation_set(X_val_selected, y_val)
     
-    logger.info("验证集结果:")
+    logger.info("Validation set results:")
     logger.info(validation_results.to_string())
     
-    # ==================== 第五步：模型选择 ====================
-    logger.info("\n🏆 第五步：模型选择 (基于验证集性能)")
+    # ==================== Step 5: Model Selection ====================
+    logger.info("\n🏆 Step 5: Model Selection (Based on Validation Set Performance)")
     
-    # 基于验证集AUC选择最佳模型
+    # Select best model by validation set AUC
     best_val_model_name = validation_results.loc[validation_results['auc'].idxmax(), 'model_name']
     best_val_auc = validation_results.loc[validation_results['auc'].idxmax(), 'auc']
     
-    logger.info(f"验证集最佳模型: {best_val_model_name} (AUC: {best_val_auc:.3f})")
+    logger.info(f"Best model on validation set: {best_val_model_name} (AUC: {best_val_auc:.3f})")
     
-    # 基于验证集F1选择最佳模型
+    # Select best model by validation set F1
     best_val_f1_model_name = validation_results.loc[validation_results['f1'].idxmax(), 'model_name']
     best_val_f1 = validation_results.loc[validation_results['f1'].idxmax(), 'f1']
     
-    logger.info(f"验证集最佳模型 (F1): {best_val_f1_model_name} (F1: {best_val_f1:.3f})")
+    logger.info(f"Best model on validation set (F1): {best_val_f1_model_name} (F1: {best_val_f1:.3f})")
     
-    # ==================== 第六步：测试集评估 ====================
-    logger.info("\n🎯 第六步：测试集评估 (最终性能)")
+    # ==================== Step 6: Test Set Evaluation ====================
+    logger.info("\n🎯 Step 6: Test Set Evaluation (Final Performance)")
     
-    # 🔑 关键：只在测试集上评估最终选择的模型
+    # 🔑 Key: Only evaluate the final selected model on the test set
     test_results = model_trainer.evaluate_on_test_set(X_test_selected, y_test)
     
-    logger.info("测试集结果:")
+    logger.info("Test set results:")
     logger.info(test_results.to_string())
     
-    # ==================== 第七步：过拟合检测 ====================
-    logger.info("\n🔍 第七步：过拟合检测")
+    # ==================== Step 7: Overfitting Detection ====================
+    logger.info("\n🔍 Step 7: Overfitting Detection")
     
-    # 比较验证集和测试集性能
+    # Compare validation and test set performance
     for _, row in validation_results.iterrows():
         model_name = row['model_name']
         val_auc = row['auc']
         val_f1 = row['f1']
         
-        # 找到对应的测试集结果
+        # Find corresponding test set result
         test_row = test_results[test_results['model_name'] == model_name]
         if not test_row.empty:
             test_auc = test_row.iloc[0]['auc']
@@ -132,60 +132,60 @@ def validation_usage_demo():
             val_test_f1_diff = abs(val_f1 - test_f1)
             
             logger.info(f"\n{model_name}:")
-            logger.info(f"  验证集: AUC={val_auc:.3f}, F1={val_f1:.3f}")
-            logger.info(f"  测试集: AUC={test_auc:.3f}, F1={test_f1:.3f}")
-            logger.info(f"  差异: AUC差异={val_test_auc_diff:.3f}, F1差异={val_test_f1_diff:.3f}")
+            logger.info(f"  Validation set: AUC={val_auc:.3f}, F1={val_f1:.3f}")
+            logger.info(f"  Test set: AUC={test_auc:.3f}, F1={test_f1:.3f}")
+            logger.info(f"  Difference: AUC diff={val_test_auc_diff:.3f}, F1 diff={val_test_f1_diff:.3f}")
             
             if val_test_auc_diff > 0.05:
-                logger.warning(f"  ⚠️  {model_name} 可能存在过拟合!")
+                logger.warning(f"  ⚠️  {model_name} may be overfitting!")
             else:
-                logger.info(f"  ✅ {model_name} 泛化性能良好")
+                logger.info(f"  ✅ {model_name} has good generalization performance")
     
-    # ==================== 第八步：超参数调优示例 ====================
-    logger.info("\n⚙️ 第八步：超参数调优示例")
+    # ==================== Step 8: Hyperparameter Tuning Example ====================
+    logger.info("\n⚙️ Step 8: Hyperparameter Tuning Example")
     
     from sklearn.ensemble import RandomForestClassifier
     from sklearn.metrics import roc_auc_score
     
-    # 为RandomForest调优n_estimators参数
+    # Tune n_estimators parameter for RandomForest
     n_estimators_list = [50, 100, 200, 300]
     val_scores = []
     
-    logger.info("RandomForest超参数调优:")
+    logger.info("RandomForest hyperparameter tuning:")
     for n_estimators in n_estimators_list:
         model = RandomForestClassifier(n_estimators=n_estimators, random_state=42)
         model.fit(X_train_selected, y_train_balanced)
         
-        # 🔑 关键：在验证集上评估
+        # 🔑 Key: Evaluate on validation set
         y_val_pred_proba = model.predict_proba(X_val_selected)[:, 1]
         val_auc = roc_auc_score(y_val, y_val_pred_proba)
         val_scores.append(val_auc)
         
-        logger.info(f"  n_estimators={n_estimators}: 验证集AUC={val_auc:.3f}")
+        logger.info(f"  n_estimators={n_estimators}: Validation set AUC={val_auc:.3f}")
     
     best_n_estimators = n_estimators_list[np.argmax(val_scores)]
-    logger.info(f"最佳n_estimators: {best_n_estimators}")
+    logger.info(f"Best n_estimators: {best_n_estimators}")
     
-    # ==================== 总结 ====================
+    # ==================== Summary ====================
     logger.info("\n" + "=" * 60)
-    logger.info("VALIDATION使用总结")
+    logger.info("VALIDATION USAGE SUMMARY")
     logger.info("=" * 60)
     
     logger.info("""
-    📋 Validation的正确使用流程:
+    📋 Correct usage process of validation:
     
-    1. 数据分割: Train(64%) + Validation(16%) + Test(20%)
-    2. 特征选择: 只在训练集上进行
-    3. 模型训练: 在训练集上训练
-    4. 验证集评估: 评估所有模型，选择最佳模型
-    5. 超参数调优: 在验证集上评估不同参数
-    6. 测试集评估: 只在最终选择的模型上进行
-    7. 过拟合检测: 比较验证集和测试集性能
+    1. Data splitting: Train(64%) + Validation(16%) + Test(20%)
+    2. Feature selection: Only on training set
+    3. Model training: Train on training set
+    4. Validation set evaluation: Evaluate all models, select the best model
+    5. Hyperparameter tuning: Evaluate different parameters on validation set
+    6. Test set evaluation: Only on the final selected model
+    7. Overfitting detection: Compare validation and test set performance
     
-    ⚠️ 重要原则:
-    - 验证集只用于模型选择和超参数调优
-    - 测试集只用于最终评估，不能用于任何调优
-    - 特征选择必须在训练集上进行
+    ⚠️ Important principles:
+    - Validation set is only for model selection and hyperparameter tuning
+    - Test set is only for final evaluation, cannot be used for any tuning
+    - Feature selection must be performed on the training set
     """)
     
     return {

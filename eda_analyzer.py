@@ -10,8 +10,8 @@ class EDAAnalyzer:
 
     def _create_readmission_binary(self, readmission_col='readmitted'):
         """
-        辅助方法：将readmission分组为Early Readmission (<30) 和 No Early Readmission (NO + >30)
-        返回临时列名，使用后需要清理
+        Helper method: Group readmission into Early Readmission (<30) and No Early Readmission (NO + >30)
+        Returns a temporary column name, which should be cleaned up after use.
         """
         temp_col = 'readmit_bin'
         self.df[temp_col] = self.df[readmission_col].apply(
@@ -74,9 +74,9 @@ class EDAAnalyzer:
 
     def plot_correlation_heatmap(self, save_path: str = None):
         """
-        Plot a heatmap of feature correlations, removing constant, all-NaN columns, 以及ID类特征（encounter_id, patient_nbr）和rolling_avg。
+        Plot a heatmap of feature correlations, removing constant, all-NaN columns, and ID-type features (encounter_id, patient_nbr) and rolling_avg.
         """
-        # 剔除ID类特征和rolling_avg
+        # Remove ID-type features and rolling_avg
         drop_cols = [col for col in ['encounter_id', 'patient_nbr', 'rolling_avg'] if col in self.df.columns]
         df_num = self.df.drop(columns=drop_cols).select_dtypes(include=[np.number])
         # Remove constant columns
@@ -99,23 +99,23 @@ class EDAAnalyzer:
 
     def plot_top_diagnoses(self, top_n=10, icd9_mapping_path=None, show_category=True):
         """
-        统计并可视化最常见的诊断编码（diag_1, diag_2, diag_3），可选显示疾病类型。
+        Count and visualize the most common diagnosis codes (diag_1, diag_2, diag_3), optionally showing disease categories.
         Args:
-            top_n: 显示前N个诊断
-            icd9_mapping_path: ICD9映射文件路径（csv），用于显示疾病类型
-            show_category: 是否显示疾病类型（否则只显示编码）
+            top_n: Number of top diagnoses to display
+            icd9_mapping_path: ICD9 mapping file path (csv), used to show disease categories
+            show_category: Whether to show disease categories (otherwise only show codes)
         """
-        # ====== ICD9常见重要编码人工注释 ======
-        # 250.x — Diabetes mellitus | 糖尿病
-        # 428.x — Congestive heart failure (CHF) | 充血性心力衰竭
-        # 401.x — Essential hypertension | 原发性高血压
-        # 414.x — Other chronic ischemic heart disease | 慢性缺血性心脏病
-        # 276.x — Disorders of fluid, electrolyte, and acid-base balance | 水电解质代谢紊乱
-        # 427.x — Cardiac dysrhythmias | 心律不齐
-        # 599.x — Other disorders of urinary system | 泌尿系统其他疾病（如尿路感染）
-        # 786.x — Symptoms involving respiratory system and other chest symptoms | 呼吸系统症状（如呼吸困难、胸痛）
-        # 496 — Chronic airway obstruction, not elsewhere classified | 慢性阻塞性肺病（COPD）
-        # 486 — Pneumonia, organism unspecified | 肺炎（病原体不明）
+        # ====== Manually annotated important ICD9 codes ======
+        # 250.x — Diabetes mellitus
+        # 428.x — Congestive heart failure (CHF)
+        # 401.x — Essential hypertension
+        # 414.x — Other chronic ischemic heart disease
+        # 276.x — Disorders of fluid, electrolyte, and acid-base balance
+        # 427.x — Cardiac dysrhythmias
+        # 599.x — Other disorders of urinary system (e.g., urinary tract infection)
+        # 786.x — Symptoms involving respiratory system and other chest symptoms (e.g., dyspnea, chest pain)
+        # 496 — Chronic airway obstruction, not elsewhere classified (COPD)
+        # 486 — Pneumonia, organism unspecified
         # =====================================
         plt.figure(figsize=(10, 6))
         diag_cols = [col for col in ['diag_1', 'diag_2', 'diag_3'] if col in self.df.columns]
@@ -195,8 +195,8 @@ class EDAAnalyzer:
     
     def plot_readmission_heatmap_by_age_gender(self, readmission_col='readmitted', age_col='age_group', gender_col='gender'):
         """
-        绘制不同年龄组和性别下的再入院率热力图。
-        如果age_group列不存在，自动尝试用age_midpoint或age分箱生成。
+        Plot a heatmap of readmission rates by age group and gender.
+        If the age_group column does not exist, automatically try to generate it using age_midpoint or age binning.
         """
         df = self.df.copy()
         # 自动生成age_group
@@ -233,7 +233,7 @@ class EDAAnalyzer:
 
     def plot_readmission_percentage_by_age_gender(self, readmission_col='readmitted', age_col='age_group', gender_col='gender'):
         """
-        参考10Yi_Hospital_Readmission_Analysis.ipynb，绘制不同年龄组和性别下各readmitted类别的百分比分布柱状图。
+        Refer to 10Yi_Hospital_Readmission_Analysis.ipynb, plot the percentage distribution bar chart of each readmitted category by age group and gender.
         """
         df = self.df.copy()
         # 自动生成age_group
@@ -268,7 +268,7 @@ class EDAAnalyzer:
 
     def plot_readmission_heatmap_by_age_gender_advanced(self, readmission_col='readmitted', age_col='age_group', gender_col='gender'):
         """
-        参考10Yi_Hospital_Readmission_Analysis.ipynb，绘制不同年龄组和性别下<30和>30再入院率的热力图。
+        Refer to 10Yi_Hospital_Readmission_Analysis.ipynb, plot the heatmap of <30 and >30 readmission rates by age group and gender.
         """
         df = self.df.copy()
         # 自动生成age_group
@@ -312,7 +312,7 @@ class EDAAnalyzer:
         ax = plt.gca()
         plt.show()
 
-    # ========== 新增：年龄区间中点函数 ==========
+    # ========== New: Age interval midpoint function ==========
     @staticmethod
     def get_age_midpoint(age_range):
         lower, upper = age_range.strip('[]').split('-')
@@ -320,7 +320,7 @@ class EDAAnalyzer:
 
     def plot_average_age(self, age_col='age'):
         """
-        计算并打印平均年龄，风格与10Yi一致。
+        Calculate and print the average age, styled as in 10Yi notebook.
         """
         if 'age_midpoint' not in self.df.columns:
             self.df['age_midpoint'] = self.df[age_col].apply(self.get_age_midpoint)
@@ -329,7 +329,7 @@ class EDAAnalyzer:
 
     def plot_avg_stay_by_age_group(self, age_col='age', stay_col='time_in_hospital'):
         """
-        按age_group分组画住院时长均值柱状图，风格与10Yi一致。
+        Plot the mean hospital stay duration by age_group as a bar chart, styled as in 10Yi notebook.
         """
         # 生成age_group
         self.df['age_group'] = self.df[age_col].str.extract(r'(\d+-\d+)')
@@ -348,7 +348,7 @@ class EDAAnalyzer:
 
     def plot_avg_stay_by_age_gender_box(self, age_col='age', stay_col='time_in_hospital', gender_col='gender'):
         """
-        按age_group和gender画住院时长箱线图，风格与10Yi一致。
+        Plot boxplots of hospital stay duration by age_group and gender, styled as in 10Yi notebook.
         """
         self.df['age_group'] = self.df[age_col].str.extract(r'(\d+-\d+)')
         plt.figure(figsize=(12, 6))
@@ -361,7 +361,7 @@ class EDAAnalyzer:
 
     def plot_top_diagnoses_simple(self, top_n=10):
         """
-        统计并画前10诊断柱状图（不做复杂映射），风格与10Yi一致。
+        Count and plot the top 10 diagnoses as a bar chart (no complex mapping), styled as in 10Yi notebook.
         """
         diagnosis_combined = pd.concat([self.df['diag_1'], self.df['diag_2'], self.df['diag_3']])
         diagnosis_counts = diagnosis_combined.value_counts()
@@ -377,8 +377,8 @@ class EDAAnalyzer:
 
     def plot_readmission_rate_by_age_gender(self, age_col='age', gender_col='gender', readmission_col='readmitted'):
         """
-        绘制不同年龄组和性别下的再入院率分组柱状图，横轴为age_group，每组内按gender分组显示Early/No Early Readmission。
-        如果age_group列不存在，自动尝试用age分箱生成。
+        Plot grouped bar charts of readmission rates by age group and gender, with age_group on the x-axis and gender groups within each, showing Early/No Early Readmission.
+        If the age_group column does not exist, automatically try to generate it using age binning.
         """
         df = self.df.copy()
         # 自动生成age_group
@@ -419,7 +419,7 @@ class EDAAnalyzer:
 
     def plot_readmission_rate_heatmap_by_age_gender(self, age_col='age', gender_col='gender', readmission_col='readmitted'):
         """
-        画age_group为y轴，gender为x轴，x轴每个gender下有Early/No Early Readmission（No Early包含NO和>30），单元格为百分比。
+        Plot a heatmap with age_group as y-axis, gender as x-axis, and for each gender, Early/No Early Readmission (No Early includes NO and >30), with cell values as percentages.
         """
         self.df['age_group'] = self.df[age_col].str.extract(r'(\d+-\d+)')
         self.df['readmit_bin'] = self.df[readmission_col].apply(lambda x: 'Early Readmission' if x == '<30' else 'No Early Readmission')
@@ -454,7 +454,7 @@ class EDAAnalyzer:
 
     def plot_comorbidity_vs_readmission(self, categorize_disease_func, readmission_col='readmitted'):
         """
-        统计并可视化不同comorbidity下Early Readmission和No Early Readmission（NO+>30）再入院率的分布，分母为所有患者。
+        Count and visualize the distribution of Early Readmission and No Early Readmission (NO+>30) rates for different comorbidities, denominator is all patients.
         """
         self.df['comorbidity_1'] = self.df['diag_1'].apply(categorize_disease_func)
         self.df['comorbidity_2'] = self.df['diag_2'].apply(categorize_disease_func)
@@ -484,7 +484,7 @@ class EDAAnalyzer:
 
     def plot_readmission_by_medication_and_dose(self, save_path="Readmission Rate (<30 Days) by Medication & Dose Change.png"):
         """
-        严格参考10Yi notebook，NO不参与分母，分母为<30和>30，y轴为<30的比例，图例只显示剂量分组。
+        Strictly refer to the 10Yi notebook, NO is not included in the denominator, denominator is <30 and >30, y-axis is the proportion of <30, legend only shows dose groups.
         """
         medication_cols = [
             'metformin', 'glimepiride', 'glipizide', 'glyburide', 'pioglitazone',
@@ -520,7 +520,7 @@ class EDAAnalyzer:
 
     def plot_readmission_by_medication_and_dose_heatmap(self, save_path="📊 Readmission Rates (<30 Days) by Medication & Dose Change.png"):
         """
-        严格参考10Yi notebook，NO不参与分母，分母为<30和>30，y轴为<30的比例，输出热力图。
+        Strictly refer to the 10Yi notebook, NO is not included in the denominator, denominator is <30 and >30, y-axis is the proportion of <30, output as a heatmap.
         """
         medication_summary = self.plot_readmission_by_medication_and_dose(save_path=None)
         if medication_summary is None or medication_summary.empty:
