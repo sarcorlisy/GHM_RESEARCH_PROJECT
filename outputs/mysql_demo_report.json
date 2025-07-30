@@ -1,9 +1,0 @@
-{
-  "timestamp": "2025-07-29T17:59:53.029901",
-  "database_info": {
-    "host": "localhost",
-    "port": 3306,
-    "database": "hospital_readmission"
-  },
-  "table_summary": {
-    "patients": 
