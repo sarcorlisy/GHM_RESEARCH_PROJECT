@@ -1,0 +1,29 @@
+# Database Configuration
+database:
+  mysql:
+    host: localhost
+    port: 3306
+    database: hospital_readmission
+    user: root
+    password: hospital123
+    charset: utf8mb4
+    
+  # Azure SQL Database (for future use)
+  azure_sql:
+    server: your-azure-server.database.windows.net
+    database: hospital_readmission
+    user: your_username
+    password: your_password
+    driver: ODBC+Driver+17+for+SQL+Server
+
+# Logging Configuration
+logging:
+  level: INFO
+  format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+  file: logs/pipeline.log
+
+# Data Processing Configuration
+data_processing:
+  sample_size: null  # null means process all data
+  random_state: 42
+  test_size: 0.2 

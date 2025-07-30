@@ -1,0 +1,36 @@
+# Azure Configuration
+azure:
+  # Storage Account Configuration
+  storage_account:
+    name: hospitalreadmission  # 你需要创建这个存储账户
+    key: JeAx5hqDdXLZRiON6nQlm+m/1PkRA6bc+BHCHf3DFNE22qsnS1V+jCo1Qpeq/vmjTLTDYeBo1BKN+AStHUwy9A==
+    connection_string: DefaultEndpointsProtocol=https;AccountName=hospitalreadmission;AccountKey=JeAx5hqDdXLZRiON6nQlm+m/1PkRA6bc+BHCHf3DFNE22qsnS1V+jCo1Qpeq/vmjTLTDYeBo1BKN+AStHUwy9A==;EndpointSuffix=core.windows.net
+    
+  # Data Lake Storage
+  data_lake:
+    container_raw: raw-data
+    container_processed: processed-data
+    container_results: ml-results
+    
+  # Azure SQL Database (optional)
+  sql_database:
+    server: hospital-readmission-server.database.windows.net
+    database: hospital_readmission
+    user: azure_user
+    password: azure_password
+    
+  # Azure Machine Learning (optional)
+  ml_workspace:
+    name: hospital-readmission-ml
+    resource_group: hospital-readmission-rg
+    subscription_id: your_subscription_id
+
+# Environment Configuration
+environment:
+  development:
+    use_local_mysql: true
+    use_azure_storage: false
+    
+  production:
+    use_local_mysql: false
+    use_azure_storage: true 

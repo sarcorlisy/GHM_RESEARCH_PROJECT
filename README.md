@@ -1,271 +1,373 @@
 # Hospital Readmission Prediction Pipeline
 
-一个完整的医院再入院预测数据科学pipeline，用于预测患者在出院后30天内再次入院的风险。
+A comprehensive hospital readmission prediction data science pipeline for predicting the risk of patients being readmitted within 30 days after discharge.
 
-## 项目概述
+## Project Overview
 
-本项目将原始的Jupyter notebook重构为一个模块化的、可重用的数据科学pipeline，包含以下主要功能：
+This project refactors the original Jupyter notebook into a modular, reusable data science pipeline with the following main features:
 
-- **数据加载和合并**: 自动加载和合并多个数据源
-- **数据预处理**: 特征工程、数据清洗、编码和标准化
-- **特征选择**: 多种特征选择方法（L1正则化、互信息、树模型重要性）
-- **模型训练**: 多种机器学习模型（逻辑回归、随机森林、XGBoost）
-- **模型评估**: 交叉验证、测试集评估、性能比较
-- **结果可视化**: 特征重要性图、模型比较图
-- **报告生成**: 自动生成详细的训练和评估报告
+- **Data Loading and Merging**: Automatic loading and merging of multiple data sources
+- **Data Preprocessing**: Feature engineering, data cleaning, encoding, and standardization
+- **Exploratory Data Analysis (EDA)**: Data distribution, correlation analysis, medical interpretation
+- **Feature Selection**: Multiple feature selection methods (L1 regularization, mutual information, tree model importance)
+- **Model Training**: Multiple machine learning models (Logistic Regression, Random Forest, XGBoost)
+- **Model Evaluation**: Cross-validation, test set evaluation, performance comparison
+- **Result Visualization**: Feature importance plots, model comparison plots
+- **Report Generation**: Automatic generation of detailed training and evaluation reports
+- **Sensitivity Analysis**: Model performance analysis for different patient subgroups
 
-## 项目结构
+## Project Structure
 
 ```
 rp0609/
-├── pipeline_config.py          # 配置文件
-├── data_loader.py              # 数据加载模块
-├── data_preprocessor.py        # 数据预处理模块
-├── feature_selector.py         # 特征选择模块
-├── model_trainer.py            # 模型训练模块
-├── main_pipeline.py            # 主pipeline文件
-├── requirements.txt            # 项目依赖
-├── README.md                   # 项目文档
-├── outputs/                    # 输出目录
-│   ├── models/                 # 保存的模型
-│   ├── *.png                   # 可视化图表
-│   ├── *.txt                   # 报告文件
-│   └── *.csv                   # 处理后的数据
-└── data/                       # 数据文件
-    ├── diabetic_data.csv       # 主要数据集
-    ├── IDS_mapping.csv         # ID映射数据
-    └── ccs_icd9_mapping.csv    # ICD-9映射数据
+├── pipeline_config.py          # Configuration file
+├── data_loader.py              # Data loading module
+├── data_preprocessor.py        # Data preprocessing module
+├── feature_selector.py         # Feature selection module
+├── model_trainer.py            # Model training module
+├── eda_analyzer.py             # Exploratory data analysis module
+├── main_pipeline.py            # Main pipeline file
+├── Demo0720 main.ipynb         # Main execution file (complete analysis workflow)
+├── requirements.txt            # Project dependencies
+├── README.md                   # Project documentation
+├── outputs/                    # Output directory
+│   ├── models/                 # Saved models
+│   ├── *.png                   # Visualization charts
+│   ├── *.txt                   # Report files
+│   ├── *.csv                   # Processed data
+│   └── *.xlsx                  # Detailed result tables
+└── data/                       # Data files
+    ├── diabetic_data.csv       # Main dataset
+    ├── IDS_mapping.csv         # ID mapping data
+    └── ccs_icd9_mapping.csv    # ICD-9 mapping data
 ```
 
-## 安装和设置
+## Installation and Setup
 
-1. **克隆项目**
+1. **Clone the project**
 ```bash
 git clone <repository-url>
 cd rp0609
 ```
 
-2. **安装依赖**
+2. **Install dependencies**
 ```bash
 pip install -r requirements.txt
 ```
 
-3. **准备数据文件**
-确保以下数据文件在项目根目录中：
+3. **Prepare data files**
+Ensure the following data files are in the project root directory:
 - `diabetic_data.csv`
 - `IDS_mapping.csv`
 - `ccs_icd9_mapping.csv`
 
-## 使用方法
+## Usage
 
-### 1. 运行完整pipeline
+### 1. Main Execution Method (Recommended)
+
+Open and run `Demo0720 main.ipynb`, which is the main execution file containing the complete analysis workflow:
+
+- **Data Loading and Preview**: Raw data loading and quick preview
+- **Data Filtering**: Keep first admission records, remove patients who cannot be readmitted
+- **Data Preprocessing**: Feature engineering, missing value handling, encoding, and standardization
+- **Exploratory Data Analysis**: Data distribution, correlation analysis, medical interpretation
+- **Feature Selection**: Multiple Top N value feature selection and result display
+- **Model Training**: GridSearchCV hyperparameter tuning
+- **Result Saving**: Automatic saving to Excel files
+
+### 2. Run Complete Pipeline
 
 ```bash
 python main_pipeline.py
 ```
 
-这将执行完整的数据科学流程：
-- 数据加载和合并
-- 特征工程和预处理
-- 特征选择
-- 模型训练和评估
-- 生成报告和可视化
+This will execute the complete data science workflow:
+- Data loading and merging
+- Feature engineering and preprocessing
+- Feature selection
+- Model training and evaluation
+- Generate reports and visualizations
 
-### 2. 使用预测功能
+### 3. Sensitivity Analysis
 
-```bash
-python main_pipeline.py --predict new_data.csv --model RandomForest
-```
+Sensitivity analysis is performed using separate notebooks, with each subgroup analysis completed in an independent notebook:
 
-### 3. 单独运行各个模块
+- `Demo0713 sensitivity comorbidity1.ipynb`: Comorbidity subgroup 1 analysis
+- `Demo0713 sensitivity comorbidity2.ipynb`: Comorbidity subgroup 2 analysis
+- `Demo0713 sensitivity diabetes diag all.ipynb`: Diabetes diagnosis (any) subgroup analysis
+- `Demo0713 sensitivity diabetes diag1.ipynb`: Diabetes diagnosis (primary) subgroup analysis
 
-你也可以单独运行各个模块进行测试：
+Each sensitivity analysis notebook includes:
+- Subgroup data filtering
+- Complete pipeline workflow (feature selection, model training, evaluation)
+- Subgroup-specific result analysis and visualization
+
+### 4. Run Individual Modules
+
+You can also run individual modules for testing:
 
 ```python
-# 数据加载
+# Data loading
 python data_loader.py
 
-# 数据预处理
+# Data preprocessing
 python data_preprocessor.py
 
-# 特征选择
+# Feature selection
 python feature_selector.py
 
-# 模型训练
+# Model training
 python model_trainer.py
 ```
 
-## Pipeline流程
+## Pipeline Workflow (Based on Demo0720 main.ipynb)
 
-### 步骤1: 数据加载 (`data_loader.py`)
-- 加载糖尿病数据集
-- 加载ID映射数据
-- 合并所有数据表
-- 生成数据摘要报告
+### Step 1: Data Loading and Preview (`data_loader.py`)
+- Load diabetes dataset
+- Load ID mapping data
+- Merge all data tables
+- Generate data summary report
 
-### 步骤2: 数据预处理 (`data_preprocessor.py`)
-- **特征工程**:
-  - 创建年龄相关特征（年龄中点、年龄组）
-  - 创建诊断分类特征（ICD-9代码分类）
-  - 创建合并症特征
-  - 创建就诊相关特征（就诊索引、滚动平均）
-- **数据清洗**:
-  - 处理缺失值
-  - 处理特殊字符
-- **数据转换**:
-  - 分类特征编码
-  - 数值特征标准化
-  - 目标变量准备
-- **数据平衡**:
-  - 使用SMOTE处理类别不平衡
+### Step 2: Data Filtering
+- **Keep First Admission Records**: Sort by `encounter_id`, keep only the first admission record for each patient
+- **Remove Patients Who Cannot Be Readmitted**: Remove records with `discharge_disposition_id` indicating death or hospice care
 
-### 步骤3: 特征选择 (`feature_selector.py`)
-- **L1正则化特征选择**: 使用逻辑回归的L1惩罚
-- **互信息特征选择**: 基于互信息分数
-- **树模型特征重要性**: 使用随机森林的特征重要性
-- 生成特征重要性可视化
-- 保存选择的特征
+### Step 3: Data Preprocessing (`data_preprocessor.py`)
+- **Feature Engineering**:
+  - Create age-related features (age midpoint, age group)
+  - Create diagnosis classification features (ICD-9 code classification)
+  - Create comorbidity features
+  - Create encounter-related features (encounter index, rolling average)
+- **Data Cleaning**:
+  - Handle missing values (delete columns with >50% missing, fill specified columns with 'Unknown')
+  - Handle special characters '?'
+- **Data Transformation**:
+  - Categorical feature encoding
+  - Numerical feature standardization
+  - Target variable preparation
+- **Data Balancing**:
+  - Use SMOTE to handle class imbalance
 
-### 步骤4: 模型训练 (`model_trainer.py`)
-- **模型类型**:
-  - 逻辑回归
-  - 随机森林
+### Step 4: Exploratory Data Analysis (`eda_analyzer.py`)
+- **Basic Statistical Analysis**:
+  - Readmission distribution
+  - Missing value distribution
+  - Average age analysis
+- **Medical Interpretation Analysis**:
+  - Readmission rates by age group and gender
+  - Relationship between comorbidities and readmission rates
+  - Relationship between medication dose changes and readmission rates
+- **Visualization**:
+  - Correlation heatmap
+  - Top 10 diagnosis distribution
+  - Length of stay analysis
+
+### Step 5: Feature Selection (`feature_selector.py`)
+- **Multiple Top N Value Feature Selection**: Support different feature counts like 5, 10, 15
+- **Feature Selection Methods**:
+  - L1 regularization feature selection
+  - Mutual information feature selection
+  - Tree model feature importance
+- **Result Display**:
+  - Feature selection matrix visualization
+  - Detailed feature selection tables
+  - Summary statistics
+
+### Step 6: Model Training (`model_trainer.py`)
+- **Model Types**:
+  - Logistic Regression
+  - Random Forest
   - XGBoost
-- **评估方法**:
-  - 5折交叉验证
-  - 验证集评估
-  - 测试集评估
-- **性能指标**:
-  - 准确率 (Accuracy)
-  - 精确率 (Precision)
-  - 召回率 (Recall)
-  - F1分数
+- **Hyperparameter Tuning**:
+  - GridSearchCV grid search
+  - 5-fold cross-validation
+  - AUC score-based optimization
+- **Evaluation Methods**:
+  - Validation set evaluation
+  - Test set evaluation
+- **Performance Metrics**:
+  - Accuracy
+  - Precision
+  - Recall
+  - F1-Score
   - AUC-ROC
 
-## 输出文件
+## Output Files
 
-运行pipeline后，会在`outputs/`目录中生成以下文件：
+After running the pipeline, the following files will be generated in the `outputs/` directory:
 
-### 数据文件
-- `merged_data.csv`: 合并后的原始数据
-- `X_train.csv`, `X_val.csv`, `X_test.csv`: 预处理后的特征数据
-- `y_train.csv`, `y_val.csv`, `y_test.csv`: 目标变量数据
+### Data Files
+- `merged_data.csv`: Merged raw data
+- `X_train.csv`, `X_val.csv`, `X_test.csv`: Preprocessed feature data
+- `y_train.csv`, `y_val.csv`, `y_test.csv`: Target variable data
 
-### 模型文件
-- `models/LogisticRegression.joblib`: 逻辑回归模型
-- `models/RandomForest.joblib`: 随机森林模型
-- `models/XGBoost.joblib`: XGBoost模型
+### Model Files
+- `models/LogisticRegression.joblib`: Logistic Regression model
+- `models/RandomForest.joblib`: Random Forest model
+- `models/XGBoost.joblib`: XGBoost model
 
-### 特征选择结果
-- `selected_features_top15.json`: 选择的特征列表
-- `feature_importance.png`: 特征重要性可视化
+### Feature Selection Results
+- `selected_features_top15.json`: Selected feature list
+- `feature_importance.png`: Feature importance visualization
 
-### 报告和可视化
-- `model_report.txt`: 模型训练报告
-- `model_comparison.png`: 模型性能比较图
-- `final_pipeline_report.txt`: 完整的pipeline报告
-- `pipeline.log`: 详细的执行日志
+### Reports and Visualizations
+- `model_report.txt`: Model training report
+- `model_comparison.png`: Model performance comparison plot
+- `final_pipeline_report.txt`: Complete pipeline report
+- `pipeline.log`: Detailed execution log
 
-## 配置选项
+### Excel Result Files
+- `0720_15_all_param_search_results_gridcv final_cv5.xlsx`: GridSearchCV detailed results
+  - Contains validation set, test set, and cross-validation results for each feature selection method
+  - Performance comparison of all hyperparameter combinations
 
-在`pipeline_config.py`中可以修改以下配置：
+## Configuration Options
+
+The following configurations can be modified in `pipeline_config.py`:
 
 ```python
 MODEL_CONFIG = {
-    'test_size': 0.2,           # 测试集比例
-    'val_size': 0.2,            # 验证集比例
-    'random_state': 42,         # 随机种子
-    'cv_folds': 5,              # 交叉验证折数
-    'feature_selection_top_n': 15  # 特征选择数量
+    'test_size': 0.2,           # Test set proportion
+    'val_size': 0.2,            # Validation set proportion
+    'random_state': 42,         # Random seed
+    'cv_folds': 5,              # Cross-validation folds
+    'feature_selection_top_n': 15  # Feature selection count
 }
 ```
 
-## 特征分类
+## Feature Categories
 
-项目中的特征按以下类别组织：
+Features in the project are organized into the following categories:
 
-- **Demographic**: 人口统计学特征（年龄、性别、种族等）
-- **Administrative**: 管理特征（入院类型、出院处置等）
-- **Clinical**: 临床特征（诊断、合并症等）
-- **Utilization**: 使用特征（住院时间、检查数量等）
-- **Medication**: 药物特征（各种糖尿病药物）
+- **Demographic**: Demographic features (age, gender, race, etc.)
+- **Administrative**: Administrative features (admission type, discharge disposition, etc.)
+- **Clinical**: Clinical features (diagnosis, comorbidities, etc.)
+- **Utilization**: Utilization features (length of stay, number of tests, etc.)
+- **Medication**: Medication features (various diabetes medications)
 
-## 模型性能
+## Model Performance
 
-基于测试集评估，各模型的典型性能表现：
+Based on test set evaluation, performance of different feature selection methods and model combinations using Top-15 features:
 
-| 模型 | AUC | F1-Score | 准确率 |
-|------|-----|----------|--------|
-| 逻辑回归 | 0.670 | 0.580 | 0.65 |
-| 随机森林 | 0.965 | 0.933 | 0.94 |
-| XGBoost | 0.958 | 0.931 | 0.93 |
+### AUC Performance Comparison
 
-## 扩展和定制
+| Feature Selection Method | Logistic Regression | Random Forest | XGBoost |
+|-------------------------|-------------------|---------------|---------|
+| L1 | 0.605 | 0.601 | **0.639** |
+| MutualInfo | 0.574 | 0.560 | 0.576 |
+| TreeImportance | 0.577 | 0.591 | 0.606 |
 
-### 添加新的特征选择方法
+### F1-Score Performance Comparison
 
-在`feature_selector.py`中添加新的方法：
+| Feature Selection Method | Logistic Regression | Random Forest | XGBoost |
+|-------------------------|-------------------|---------------|---------|
+| L1 | **0.195** | 0.040 | 0.014 |
+| MutualInfo | 0.182 | 0.003 | 0.005 |
+| TreeImportance | 0.182 | 0.012 | 0.006 |
+
+### Performance Summary
+
+- **Best AUC Performance**: L1 feature selection + XGBoost model (0.639)
+- **Best F1-Score Performance**: L1 feature selection + Logistic Regression model (0.195)
+- **Overall Performance**: Logistic Regression performs better in F1-Score, while XGBoost performs best in AUC
+- **Feature Selection Impact**: L1 regularization feature selection method performs best in most cases
+
+## Sensitivity Analysis
+
+Sensitivity analysis is performed through separate notebooks, with each subgroup analysis including:
+
+### Subgroup Definitions
+- **Comorbidity Subgroup 1**: Patients with comorbidity count = 1
+- **Comorbidity Subgroup 2**: Patients with comorbidity count ≥ 2
+- **Diabetes Diagnosis (Any)**: Patients with any of the three diagnoses being diabetes
+- **Diabetes Diagnosis (Primary)**: Patients with primary diagnosis being diabetes
+
+### Analysis Workflow
+Each sensitivity analysis notebook executes the complete pipeline:
+1. Subgroup data filtering
+2. Feature engineering and preprocessing
+3. Feature selection
+4. Model training and evaluation
+5. Result analysis and visualization
+
+### Result Comparison
+- Model performance comparison across subgroups
+- Feature selection difference analysis
+- Medical interpretation and clinical significance
+
+## Extension and Customization
+
+### Adding New Feature Selection Methods
+
+Add new methods in `feature_selector.py`:
 
 ```python
 def select_features_by_new_method(self, X, y, top_n=15):
-    # 实现新的特征选择逻辑
+    # Implement new feature selection logic
     pass
 ```
 
-### 添加新的模型
+### Adding New Models
 
-在`model_trainer.py`的`get_models()`方法中添加：
+Add in the `get_models()` method of `model_trainer.py`:
 
 ```python
 def get_models(self):
     return {
-        # 现有模型...
+        # Existing models...
         'NewModel': NewModelClass(random_state=self.random_state)
     }
 ```
 
-### 修改特征工程
+### Modifying Feature Engineering
 
-在`data_preprocessor.py`中添加新的特征工程方法：
+Add new feature engineering methods in `data_preprocessor.py`:
 
 ```python
 def create_new_feature(self, df):
-    # 实现新的特征创建逻辑
+    # Implement new feature creation logic
     return df
 ```
 
-## 故障排除
+### Adding New Sensitivity Analysis Subgroups
 
-### 常见问题
+Create new notebook files, such as `Demo0713 sensitivity new_subgroup.ipynb`, including:
+- Subgroup definition logic
+- Complete pipeline workflow
+- Subgroup-specific result analysis
 
-1. **内存不足**: 对于大数据集，可以减少特征选择的数量或使用数据采样
-2. **依赖包版本冲突**: 使用虚拟环境并严格按照`requirements.txt`安装
-3. **数据文件缺失**: 确保所有必需的数据文件都在正确的位置
+## Troubleshooting
 
-### 日志文件
+### Common Issues
 
-查看`pipeline.log`文件获取详细的执行信息和错误信息。
+1. **Insufficient Memory**: For large datasets, reduce the number of feature selections or use data sampling
+2. **Dependency Package Version Conflicts**: Use virtual environment and install strictly according to `requirements.txt`
+3. **Missing Data Files**: Ensure all required data files are in the correct location
 
-## 贡献
+### Log Files
 
-欢迎提交问题报告和功能请求。如果要贡献代码：
+Check the `pipeline.log` file for detailed execution information and error messages.
 
-1. Fork项目
-2. 创建功能分支
-3. 提交更改
-4. 推送到分支
-5. 创建Pull Request
+## Contributing
 
-## 许可证
+Welcome to submit issue reports and feature requests. If you want to contribute code:
 
-本项目采用MIT许可证。
+1. Fork the project
+2. Create a feature branch
+3. Commit changes
+4. Push to the branch
+5. Create a Pull Request
 
-## 联系方式
+## License
 
-如有问题或建议，请通过以下方式联系：
-- 提交GitHub Issue
-- 发送邮件至项目维护者
+This project is licensed under the MIT License.
+
+## Contact
+
+For questions or suggestions, please contact through:
+- Submit GitHub Issue
+- Send email to project maintainer
 
 ---
 
-**注意**: 这是一个用于教育和研究目的的项目。在实际医疗应用中，请确保遵守相关的医疗数据隐私法规和伦理准则。
+**Note**: This is a project for educational and research purposes. In actual medical applications, please ensure compliance with relevant medical data privacy regulations and ethical guidelines.

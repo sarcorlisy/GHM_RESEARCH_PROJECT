@@ -108,6 +108,10 @@ class ModelTrainer:
             raise ValueError(f"Unknown model: {model_name}. Available models: {list(models.keys())}")
         model = models[model_name]
         model.fit(X_train, y_train)
+        
+        # 保存训练好的模型到trained_models字典
+        self.trained_models[model_name] = model
+        
         auc_cv, f1_cv = self.evaluate_model_with_cv(model, X_train, y_train, 
                                                    cv_folds=MODEL_CONFIG['cv_folds'])
         results = {
