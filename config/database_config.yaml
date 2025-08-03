@@ -1,11 +1,12 @@
-# Database Configuration
+# Database Configuration Template
+# Copy this file and replace with your actual database credentials
 database:
   mysql:
     host: localhost
     port: 3306
     database: hospital_readmission
-    user: root
-    password: hospital123
+    user: your_username
+    password: your_password
     charset: utf8mb4
     
   # Azure SQL Database (for future use)

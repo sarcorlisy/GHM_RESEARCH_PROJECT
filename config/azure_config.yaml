@@ -1,10 +1,11 @@
-# Azure Configuration
+# Azure Configuration Template
+# Copy this file and replace with your actual Azure credentials
 azure:
   # Storage Account Configuration
   storage_account:
-    name: hospitalreadmission  # 你需要创建这个存储账户
-    key: JeAx5hqDdXLZRiON6nQlm+m/1PkRA6bc+BHCHf3DFNE22qsnS1V+jCo1Qpeq/vmjTLTDYeBo1BKN+AStHUwy9A==
-    connection_string: DefaultEndpointsProtocol=https;AccountName=hospitalreadmission;AccountKey=JeAx5hqDdXLZRiON6nQlm+m/1PkRA6bc+BHCHf3DFNE22qsnS1V+jCo1Qpeq/vmjTLTDYeBo1BKN+AStHUwy9A==;EndpointSuffix=core.windows.net
+    name: your_storage_account_name
+    key: your_storage_account_key
+    connection_string: your_connection_string
     
   # Data Lake Storage
   data_lake:
@@ -14,15 +15,15 @@ azure:
     
   # Azure SQL Database (optional)
   sql_database:
-    server: hospital-readmission-server.database.windows.net
+    server: your-azure-server.database.windows.net
     database: hospital_readmission
-    user: azure_user
-    password: azure_password
+    user: your_username
+    password: your_password
     
   # Azure Machine Learning (optional)
   ml_workspace:
-    name: hospital-readmission-ml
-    resource_group: hospital-readmission-rg
+    name: your-ml-workspace-name
+    resource_group: your-resource-group
     subscription_id: your_subscription_id
 
 # Environment Configuration
