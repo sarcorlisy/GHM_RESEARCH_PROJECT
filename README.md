@@ -32,14 +32,7 @@ This project implements a comprehensive hospital readmission prediction system w
 - **ETL Pipeline**: Complete data extraction, transformation, and loading from Azure to MySQL
 - **Dynamic Data Cleaning**: Automatic removal of columns with high invalid value rates (>50%)
 - **API Integration**: Heterogeneous data source integration for data enrichment
-- **Data Preprocessing**: Feature engineering, data cleaning, encoding, and standardization
-- **Exploratory Data Analysis (EDA)**: Data distribution, correlation analysis, medical interpretation
-- **Feature Selection**: Multiple feature selection methods (L1 regularization, mutual information, tree model importance)
-- **Model Training**: Multiple machine learning models (Logistic Regression, Random Forest, XGBoost)
-- **Model Evaluation**: Cross-validation, test set evaluation, performance comparison
-- **Result Visualization**: Feature importance plots, model comparison plots
-- **Report Generation**: Automatic generation of detailed training and evaluation reports
-- **Sensitivity Analysis**: Model performance analysis for different patient subgroups
+
 
 ## Project Structure
 
@@ -68,11 +61,6 @@ rp0609/
 ├── run_complete_etl_pipeline.py # One-click ETL pipeline runner
 ├── run_api_integration.py      # API integration runner
 ├── demo_api_integration.py     # API integration demo
-├── model_trainer.py            # Model training module
-├── feature_selector.py         # Feature selection module
-├── data_preprocessor.py        # Data preprocessing module
-├── eda_analyzer.py             # Exploratory data analysis module
-├── sensitivity_analyzer.py     # Sensitivity analysis module
 ├── requirements.txt            # Project dependencies
 ├── README.md                   # Project documentation
 ├── USAGE_GUIDE.md              # Detailed usage guide
@@ -176,49 +164,6 @@ python run_api_integration.py --full
 - **Data Quality API**: Data validation
 - **Heterogeneous APIs**: Lerner Research Institute, External Vendors, Research Teams
 
-### 3. Machine Learning Pipeline
-
-#### Model Training
-```bash
-python model_trainer.py
-```
-
-This will execute:
-- Data loading and preprocessing
-- Feature selection using multiple methods
-- Model training (Logistic Regression, Random Forest, XGBoost)
-- Cross-validation and evaluation
-- Performance comparison and visualization
-
-#### Feature Selection
-```bash
-python feature_selector.py
-```
-
-#### Exploratory Data Analysis
-```bash
-python eda_analyzer.py
-```
-
-#### Sensitivity Analysis
-```bash
-python run_sensitivity_analysis.py
-```
-
-### 4. Individual Modules
-
-You can also run individual modules for testing:
-
-```bash
-# Data preprocessing
-python data_preprocessor.py
-
-# Feature selection
-python feature_selector.py
-
-# EDA analysis
-python eda_analyzer.py
-```
 
 ## ETL Pipeline Workflow
 
