@@ -31,6 +31,10 @@ pytest-cov>=4.0.0
 # Logging and Monitoring
 structlog>=22.0.0
 
+# API Integration
+requests>=2.28.0
+urllib3>=1.26.0
+
 # Development Tools
 black>=22.0.0
 flake8>=5.0.0

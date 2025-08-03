@@ -35,8 +35,10 @@ hospital_readmission_project/
 │   │   └── azure_uploader.py
 │   ├── etl/                     # ETL pipeline
 │   │   ├── sql_processing/      # SQL scripts
-│   │   │   ├── 01_data_cleaning.sql
-│   │   │   └── 02_feature_engineering.sql
+│   │   │   ├── 01_data_mapping.sql
+│   │   │   ├── 02_data_cleaning.sql
+│   │   │   ├── 03_business_cleaning.sql
+│   │   │   └── 04_feature_engineering.sql
 │   │   └── etl_pipeline.py      # Main ETL orchestrator
 │   ├── ml_pipeline/             # Machine learning (future)
 │   └── utils/                   # Utilities
@@ -94,26 +96,47 @@ python run_pipeline.py --log-level DEBUG
 
 ## SQL Processing
 
-### Data Cleaning (`01_data_cleaning.sql`)
+### Data Mapping (`01_data_mapping.sql`)
+- **Purpose**: Create mapping tables and merge with main data
+- **Execution Order**: 1st (after Python import with 8 cleaning rules)
+- **Input**: `patients` table (with 8 cleaning rules applied)
+- **Output**: `patients_mapped` table
+- **Key Features**:
+  - Creates admission_type_mapping, discharge_disposition_mapping, admission_source_mapping
+  - Merges mapping data with patient records
+  - Adds descriptive text for ID fields
 
-This script performs comprehensive data cleaning:
+### Data Cleaning (`02_data_cleaning.sql`)
+- **Purpose**: Basic data cleaning and quality improvements
+- **Execution Order**: 2nd (after mapping, before dynamic column cleaning in Python)
+- **Input**: `patients_mapped` table
+- **Output**: `patients_cleaned` table
+- **Key Features**:
+  - Additional data quality improvements beyond Python 8 rules
+  - Creates cleaned versions of all fields
+  - Adds data quality flags
+  - Note: Dynamic column cleaning done in Python after this step
 
-- **Age Field**: Handles age ranges and invalid values
-- **Gender Field**: Standardizes gender values
-- **Missing Values**: Replaces '?' with 'Unknown'
-- **Data Validation**: Ensures data quality
-- **Quality Flags**: Tracks data quality issues
+### Business Rules Cleaning (`03_business_cleaning.sql`)
+- **Purpose**: Apply business rules and final data cleaning
+- **Execution Order**: 3rd (after dynamic column cleaning in Python)
+- **Input**: `patients_cleaned` table (after dynamic column cleaning)
+- **Output**: `patients_business_cleaned` table
+- **Key Features**:
+  - Removes patients who cannot be readmitted (deceased/hospice)
+  - Applies business logic filters
+  - Creates final cleaned dataset for analysis
 
-### Feature Engineering (`02_feature_engineering.sql`)
-
-This script creates machine learning features:
-
-- **Demographic Features**: Age groups, gender categories
-- **Hospital Stay Features**: Duration categories
-- **Medical Features**: Procedure counts, medication counts
-- **Visit History**: Previous visit patterns
-- **Risk Scores**: Calculated risk indicators
-- **Target Variables**: Readmission flags
+### Feature Engineering (`04_feature_engineering.sql`)
+- **Purpose**: Create features for machine learning models
+- **Execution Order**: 4th (final step, after all cleaning is complete)
+- **Input**: `patients_business_cleaned` table
+- **Output**: `patients_features` table
+- **Key Features**:
+  - Creates age groups, stay duration categories
+  - Calculates visit frequency and diagnosis complexity
+  - Generates risk scores and categories
+  - Prepares target variables for ML models
 
 ## ETL Pipeline
 

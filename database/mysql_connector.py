@@ -1,7 +1,7 @@
 """
-MySQL数据库连接器
+MySQL Database Connector
 
-专门为MySQL数据库设计的连接器和查询执行器
+Specialized connector and query executor designed for MySQL database
 """
 
 import pandas as pd
@@ -13,14 +13,14 @@ from datetime import datetime
 import logging
 
 class MySQLConnector:
-    """MySQL数据库连接器"""
+    """MySQL Database Connector"""
     
     def __init__(self, config=None):
         """
-        初始化MySQL连接器
+        Initialize MySQL connector
         
         Args:
-            config (dict): 数据库配置
+            config (dict): Database configuration
         """
         self.config = config or self._get_default_config()
         self.connection = None
@@ -28,7 +28,7 @@ class MySQLConnector:
         self._setup_logging()
     
     def _get_default_config(self):
-        """获取默认配置"""
+        """Get default configuration"""
         return {
             'host': os.getenv('DB_HOST', 'localhost'),
             'port': int(os.getenv('DB_PORT', '3306')),
@@ -40,7 +40,7 @@ class MySQLConnector:
         }
     
     def _setup_logging(self):
-        """设置日志"""
+        """Setup logging"""
         logging.basicConfig(
             level=logging.INFO,
             format='%(asctime)s - %(levelname)s - %(message)s'
@@ -48,44 +48,44 @@ class MySQLConnector:
         self.logger = logging.getLogger(__name__)
     
     def connect(self):
-        """连接到MySQL数据库"""
+        """Connect to MySQL database"""
         try:
-            # 创建数据库连接
+            # Create database connection
             self.connection = mysql.connector.connect(**self.config)
             
-            # 创建SQLAlchemy引擎
+            # Create SQLAlchemy engine
             connection_string = (
                 f"mysql+mysqlconnector://{self.config['user']}:{self.config['password']}"
                 f"@{self.config['host']}:{self.config['port']}/{self.config['database']}"
             )
             self.engine = create_engine(connection_string)
             
-            self.logger.info(f"✅ 成功连接到MySQL数据库: {self.config['host']}:{self.config['port']}")
+            self.logger.info(f"✅ Successfully connected to MySQL database: {self.config['host']}:{self.config['port']}")
             return True
             
         except Error as e:
-            self.logger.error(f"❌ MySQL连接失败: {e}")
+            self.logger.error(f"❌ MySQL connection failed: {e}")
             return False
     
     def disconnect(self):
-        """断开数据库连接"""
+        """Disconnect from database"""
         if self.connection:
             self.connection.close()
-            self.logger.info("数据库连接已关闭")
+            self.logger.info("Database connection closed")
     
     def create_database_if_not_exists(self):
-        """创建数据库（如果不存在）"""
+        """Create database (if it doesn't exist)"""
         try:
-            # 临时连接（不指定数据库）
+            # Temporary connection (without specifying database)
             temp_config = self.config.copy()
             temp_config.pop('database', None)
             
             temp_connection = mysql.connector.connect(**temp_config)
             cursor = temp_connection.cursor()
             
-            # 创建数据库
+            # Create database
             cursor.execute(f"CREATE DATABASE IF NOT EXISTS {self.config['database']} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
-            self.logger.info(f"✅ 数据库 {self.config['database']} 已创建或已存在")
+            self.logger.info(f"✅ Database {self.config['database']} created or already exists")
             
             cursor.close()
             temp_connection.close()
@@ -93,255 +93,238 @@ class MySQLConnector:
             return True
             
         except Error as e:
-            self.logger.error(f"❌ 创建数据库失败: {e}")
+            self.logger.error(f"❌ Failed to create database: {e}")
             return False
     
     def create_tables(self):
-        """创建必要的表"""
+        """Create necessary tables"""
         try:
-            if not self.connection:
-                self.connect()
-            
             cursor = self.connection.cursor()
             
-            # 创建患者表
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS patients (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    patient_id VARCHAR(50) UNIQUE NOT NULL,
-                    age INT,
-                    gender VARCHAR(10),
-                    race VARCHAR(50),
-                    admission_type_id INT,
-                    discharge_disposition_id INT,
-                    admission_source_id INT,
-                    time_in_hospital INT,
-                    num_lab_procedures INT,
-                    num_procedures INT,
-                    num_medications INT,
-                    number_outpatient INT,
-                    number_emergency INT,
-                    number_inpatient INT,
-                    diag_1 VARCHAR(10),
-                    diag_2 VARCHAR(10),
-                    diag_3 VARCHAR(10),
-                    readmitted VARCHAR(10),
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    INDEX idx_patient_id (patient_id),
-                    INDEX idx_readmitted (readmitted),
-                    INDEX idx_age (age),
-                    INDEX idx_time_in_hospital (time_in_hospital)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-            """)
+            # Create patients table
+            create_patients_table = """
+            CREATE TABLE IF NOT EXISTS patients (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                patient_id VARCHAR(50),
+                encounter_id VARCHAR(50),
+                race VARCHAR(50),
+                gender VARCHAR(50),
+                age VARCHAR(50),
+                weight VARCHAR(50),
+                admission_type_id INT,
+                discharge_disposition_id INT,
+                admission_source_id INT,
+                time_in_hospital INT,
+                payer_code VARCHAR(50),
+                medical_specialty VARCHAR(200),
+                num_lab_procedures INT,
+                num_procedures INT,
+                num_medications INT,
+                number_outpatient INT,
+                number_emergency INT,
+                number_inpatient INT,
+                diag_1 VARCHAR(50),
+                diag_2 VARCHAR(50),
+                diag_3 VARCHAR(50),
+                number_diagnoses INT,
+                max_glu_serum VARCHAR(50),
+                A1Cresult VARCHAR(50),
+                metformin VARCHAR(50),
+                repaglinide VARCHAR(50),
+                nateglinide VARCHAR(50),
+                chlorpropamide VARCHAR(50),
+                glimepiride VARCHAR(50),
+                acetohexamide VARCHAR(50),
+                glipizide VARCHAR(50),
+                glyburide VARCHAR(50),
+                tolbutamide VARCHAR(50),
+                pioglitazone VARCHAR(50),
+                rosiglitazone VARCHAR(50),
+                acarbose VARCHAR(50),
+                miglitol VARCHAR(50),
+                troglitazone VARCHAR(50),
+                tolazamide VARCHAR(50),
+                examide VARCHAR(50),
+                citoglipton VARCHAR(50),
+                insulin VARCHAR(50),
+                glyburide_metformin VARCHAR(50),
+                glipizide_metformin VARCHAR(50),
+                glimepiride_pioglitazone VARCHAR(50),
+                metformin_rosiglitazone VARCHAR(50),
+                metformin_pioglitazone VARCHAR(50),
+                medication_change VARCHAR(50),
+                diabetesMed VARCHAR(50),
+                readmitted VARCHAR(50),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            """
             
-            # 创建就诊记录表
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS encounters (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    encounter_id VARCHAR(50) UNIQUE NOT NULL,
-                    patient_id VARCHAR(50),
-                    admission_date DATE,
-                    discharge_date DATE,
-                    length_of_stay INT,
-                    readmission_within_30_days BOOLEAN,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (patient_id) REFERENCES patients(patient_id),
-                    INDEX idx_encounter_id (encounter_id),
-                    INDEX idx_patient_id (patient_id),
-                    INDEX idx_admission_date (admission_date)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-            """)
-            
-            # 创建药物信息表
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS medications (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    patient_id VARCHAR(50),
-                    medication_name VARCHAR(100),
-                    dosage VARCHAR(50),
-                    frequency VARCHAR(50),
-                    start_date DATE,
-                    end_date DATE,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (patient_id) REFERENCES patients(patient_id),
-                    INDEX idx_patient_id (patient_id),
-                    INDEX idx_medication_name (medication_name)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-            """)
-            
-            # 创建模型结果表
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS model_results (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    model_name VARCHAR(100),
-                    feature_selection_method VARCHAR(50),
-                    test_accuracy DECIMAL(5,4),
-                    test_precision DECIMAL(5,4),
-                    test_recall DECIMAL(5,4),
-                    test_f1_score DECIMAL(5,4),
-                    test_auc DECIMAL(5,4),
-                    cv_accuracy DECIMAL(5,4),
-                    cv_std DECIMAL(5,4),
-                    training_time_seconds DECIMAL(10,2),
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    INDEX idx_model_name (model_name),
-                    INDEX idx_created_at (created_at)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-            """)
+            cursor.execute(create_patients_table)
+            self.logger.info("✅ Patients table created successfully")
             
             cursor.close()
-            self.logger.info("✅ 所有表创建成功")
             return True
             
         except Error as e:
-            self.logger.error(f"❌ 创建表失败: {e}")
+            self.logger.error(f"❌ Failed to create tables: {e}")
             return False
     
     def insert_dataframe(self, df, table_name, if_exists='append'):
-        """将DataFrame插入到MySQL表"""
+        """
+        Insert DataFrame into database table
+        
+        Args:
+            df: DataFrame to insert
+            table_name: Target table name
+            if_exists: What to do if table exists ('fail', 'replace', 'append')
+        """
         try:
-            if not self.engine:
-                self.connect()
-            
-            # 使用SQLAlchemy插入数据
-            df.to_sql(
-                name=table_name,
-                con=self.engine,
-                if_exists=if_exists,
-                index=False,
-                method='multi',
-                chunksize=1000
-            )
-            
-            self.logger.info(f"✅ 成功插入 {len(df)} 行数据到表 {table_name}")
+            df.to_sql(table_name, self.engine, if_exists=if_exists, index=False)
+            self.logger.info(f"✅ Successfully inserted {len(df)} rows into {table_name}")
             return True
-            
         except Exception as e:
-            self.logger.error(f"❌ 插入数据失败: {e}")
+            self.logger.error(f"❌ Failed to insert DataFrame: {e}")
             return False
     
     def execute_query(self, query, params=None):
-        """执行SQL查询并返回DataFrame"""
+        """
+        Execute SELECT query
+        
+        Args:
+            query: SQL query string
+            params: Query parameters
+            
+        Returns:
+            Query results
+        """
         try:
-            if not self.connection:
-                self.connect()
-            
-            # 使用pandas读取SQL查询结果
-            df = pd.read_sql(query, self.engine, params=params)
-            return df
-            
-        except Exception as e:
-            self.logger.error(f"❌ 执行查询失败: {e}")
-            return pd.DataFrame()
+            cursor = self.connection.cursor(dictionary=True)
+            cursor.execute(query, params or ())
+            results = cursor.fetchall()
+            cursor.close()
+            return results
+        except Error as e:
+            self.logger.error(f"❌ Query execution failed: {e}")
+            return None
     
     def execute_update(self, query, params=None):
-        """执行更新操作"""
-        try:
-            if not self.connection:
-                self.connect()
+        """
+        Execute UPDATE/INSERT/DELETE query
+        
+        Args:
+            query: SQL query string
+            params: Query parameters
             
+        Returns:
+            Number of affected rows
+        """
+        try:
             cursor = self.connection.cursor()
             cursor.execute(query, params or ())
-            self.connection.commit()
-            
             affected_rows = cursor.rowcount
+            self.connection.commit()
             cursor.close()
-            
-            self.logger.info(f"✅ 更新操作成功，影响 {affected_rows} 行")
+            self.logger.info(f"✅ Query executed successfully, {affected_rows} rows affected")
             return affected_rows
-            
         except Error as e:
-            self.logger.error(f"❌ 更新操作失败: {e}")
+            self.logger.error(f"❌ Update execution failed: {e}")
             return 0
     
     def get_table_info(self, table_name):
-        """获取表信息"""
-        try:
-            query = f"""
-                SELECT 
-                    COLUMN_NAME,
-                    DATA_TYPE,
-                    IS_NULLABLE,
-                    COLUMN_DEFAULT,
-                    COLUMN_COMMENT
-                FROM INFORMATION_SCHEMA.COLUMNS 
-                WHERE TABLE_SCHEMA = '{self.config['database']}' 
-                AND TABLE_NAME = '{table_name}'
-                ORDER BY ORDINAL_POSITION
-            """
-            return self.execute_query(query)
+        """
+        Get table structure information
+        
+        Args:
+            table_name: Table name
             
-        except Exception as e:
-            self.logger.error(f"❌ 获取表信息失败: {e}")
-            return pd.DataFrame()
+        Returns:
+            Table structure information
+        """
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(f"DESCRIBE {table_name}")
+            columns = cursor.fetchall()
+            cursor.close()
+            return columns
+        except Error as e:
+            self.logger.error(f"❌ Failed to get table info: {e}")
+            return None
     
     def get_table_count(self, table_name):
-        """获取表的行数"""
-        try:
-            query = f"SELECT COUNT(*) as count FROM {table_name}"
-            result = self.execute_query(query)
-            return result['count'].iloc[0] if not result.empty else 0
+        """
+        Get row count of table
+        
+        Args:
+            table_name: Table name
             
-        except Exception as e:
-            self.logger.error(f"❌ 获取表行数失败: {e}")
+        Returns:
+            Row count
+        """
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+            count = cursor.fetchone()[0]
+            cursor.close()
+            return count
+        except Error as e:
+            self.logger.error(f"❌ Failed to get table count: {e}")
             return 0
 
+
 class MySQLManager:
-    """MySQL数据库管理器"""
+    """MySQL Database Manager - High-level operations"""
     
     def __init__(self, config=None):
+        """Initialize MySQL manager"""
         self.connector = MySQLConnector(config)
     
     def initialize_database(self):
-        """初始化数据库"""
+        """Initialize database and tables"""
         try:
-            # 创建数据库
+            # Create database if not exists
             if not self.connector.create_database_if_not_exists():
                 return False
             
-            # 连接数据库
+            # Connect to database
             if not self.connector.connect():
                 return False
             
-            # 创建表
+            # Create tables
             if not self.connector.create_tables():
                 return False
             
-            self.connector.logger.info("✅ MySQL数据库初始化完成")
+            self.logger.info("✅ Database initialization completed successfully")
             return True
             
         except Exception as e:
-            self.connector.logger.error(f"❌ 数据库初始化失败: {e}")
+            self.logger.error(f"❌ Database initialization failed: {e}")
             return False
     
     def migrate_csv_to_database(self, csv_file, table_name, chunk_size=1000):
-        """将CSV文件迁移到数据库"""
+        """
+        Migrate CSV file to database table
+        
+        Args:
+            csv_file: CSV file path
+            table_name: Target table name
+            chunk_size: Number of rows to process at once
+        """
         try:
-            if not os.path.exists(csv_file):
-                self.connector.logger.error(f"❌ CSV文件不存在: {csv_file}")
-                return False
+            # Read CSV in chunks
+            for chunk in pd.read_csv(csv_file, chunksize=chunk_size):
+                self.connector.insert_dataframe(chunk, table_name, if_exists='append')
             
-            # 读取CSV文件
-            df = pd.read_csv(csv_file)
-            self.connector.logger.info(f"📁 读取CSV文件: {csv_file} ({len(df)} 行)")
-            
-            # 插入数据
-            success = self.connector.insert_dataframe(df, table_name)
-            
-            if success:
-                count = self.connector.get_table_count(table_name)
-                self.connector.logger.info(f"✅ 数据迁移完成，表 {table_name} 现在有 {count} 行数据")
-            
-            return success
+            self.logger.info(f"✅ CSV migration to {table_name} completed successfully")
+            return True
             
         except Exception as e:
-            self.connector.logger.error(f"❌ CSV迁移失败: {e}")
+            self.logger.error(f"❌ CSV migration failed: {e}")
             return False
     
     def get_database_summary(self):
-        """获取数据库摘要信息"""
+        """Get database summary information"""
         try:
-            tables = ['patients', 'encounters', 'medications', 'model_results']
+            tables = ['patients']
             summary = {}
             
             for table in tables:
@@ -351,9 +334,9 @@ class MySQLManager:
             return summary
             
         except Exception as e:
-            self.connector.logger.error(f"❌ 获取数据库摘要失败: {e}")
+            self.logger.error(f"❌ Failed to get database summary: {e}")
             return {}
     
     def close(self):
-        """关闭数据库连接"""
+        """Close database connection"""
         self.connector.disconnect() 

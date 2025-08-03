@@ -79,7 +79,7 @@ LEFT JOIN admission_source_mapping asm ON p.admission_source_id = asm.admission_
 **Upload to Azure**: `processed-data/mapped_data.csv`
 
 ### Phase 4: Data Cleaning Process
-**SQL Script**: `src/etl/sql_processing/04_data_cleaning.sql`
+**SQL Script**: `src/etl/sql_processing/03_business_cleaning.sql`
 
 #### Step 1: Remove ID Columns + Invalid Value Analysis and Column Removal
 ```sql
@@ -97,7 +97,7 @@ SELECT [all columns except 3 ID columns] FROM patients_mapped;
 ```sql
 -- Remove patients who cannot be readmitted
 CREATE TABLE patients_business_cleaned AS
-SELECT * FROM patients_final_cleaned
+SELECT * FROM patients_cleaned
 WHERE discharge_disposition_desc NOT IN (
     'Expired', 'Hospice / home', 'Hospice / medical facility',
     'Expired at home. Medicaid only, hospice.',

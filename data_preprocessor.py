@@ -230,7 +230,7 @@ class DataPreprocessor:
         self.feature_engineering_applied = True
         logger.info("Feature engineering completed")
         
-        # 在特征工程最后一步直接剔除rolling_avg，确保后续df不再包含该特征
+        # Remove rolling_avg in the final step of feature engineering to ensure subsequent df no longer contains this feature
         if 'rolling_avg' in df.columns:
             df = df.drop(columns=['rolling_avg'])
         
@@ -345,7 +345,7 @@ class DataPreprocessor:
         categorical_features = X_train.select_dtypes(include=['object']).columns
         
         if encoding_method == 'label':
-            # Label Encoding (适合树模型)
+            # Label Encoding (suitable for tree models)
             for col in categorical_features:
                 le = LabelEncoder()
                 X_train[col] = le.fit_transform(X_train[col])
@@ -354,24 +354,24 @@ class DataPreprocessor:
                 self.label_encoders[col] = le
                 
         elif encoding_method == 'onehot':
-            # One-Hot Encoding (适合线性模型)
+            # One-Hot Encoding (suitable for linear models)
             from sklearn.preprocessing import OneHotEncoder
             ohe = OneHotEncoder(sparse_output=False, handle_unknown='ignore')
             
-            # 对训练集进行One-Hot编码
+            # Perform One-Hot encoding on training set
             train_encoded = ohe.fit_transform(X_train[categorical_features])
             val_encoded = ohe.transform(X_val[categorical_features])
             test_encoded = ohe.transform(X_test[categorical_features])
             
-            # 创建新的列名
+            # Create new column names
             feature_names = ohe.get_feature_names_out(categorical_features)
             
-            # 删除原始分类列
+            # Delete original categorical columns
             X_train = X_train.drop(columns=categorical_features)
             X_val = X_val.drop(columns=categorical_features)
             X_test = X_test.drop(columns=categorical_features)
             
-            # 添加编码后的列
+            # Add encoded columns
             X_train = pd.concat([X_train, pd.DataFrame(train_encoded, columns=feature_names, index=X_train.index)], axis=1)
             X_val = pd.concat([X_val, pd.DataFrame(val_encoded, columns=feature_names, index=X_val.index)], axis=1)
             X_test = pd.concat([X_test, pd.DataFrame(test_encoded, columns=feature_names, index=X_test.index)], axis=1)
@@ -397,10 +397,10 @@ class DataPreprocessor:
         
         numerical_features = X_train.select_dtypes(include=['int64', 'float64']).columns
         
-        # 拟合标准化器
+        # Fit the scaler
         self.scaler.fit(X_train[numerical_features])
         
-        # 转换所有数据集
+        # Transform all datasets
         X_train[numerical_features] = self.scaler.transform(X_train[numerical_features])
         X_val[numerical_features] = self.scaler.transform(X_val[numerical_features])
         X_test[numerical_features] = self.scaler.transform(X_test[numerical_features])
@@ -456,11 +456,11 @@ class DataPreprocessor:
         """
         logger.info("Saving preprocessed data...")
         
-        # 创建输出目录
+        # Create output directory
         import os
         os.makedirs(output_dir, exist_ok=True)
         
-        # 保存数据
+        # Save data
         X_train.to_csv(f"{output_dir}/X_train.csv", index=False)
         X_val.to_csv(f"{output_dir}/X_val.csv", index=False)
         X_test.to_csv(f"{output_dir}/X_test.csv", index=False)

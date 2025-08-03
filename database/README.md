@@ -5,7 +5,7 @@ This module extends the hospital readmission prediction pipeline with comprehens
 ## Overview
 
 The database extension provides:
-- **PostgreSQL Database Connectivity**: Full database operations with SQLAlchemy
+- **MySQL Database Connectivity**: Full database operations with mysql-connector-python and SQLAlchemy
 - **Advanced SQL Queries**: Predefined analytics queries for healthcare data
 - **Data Migration Tools**: CSV to database migration with validation
 - **Model Result Storage**: Persistent storage of ML model results
@@ -14,8 +14,8 @@ The database extension provides:
 ## Features
 
 ### 🗄️ Database Management
-- **DatabaseConnector**: Core database connection and operations
-- **DatabaseManager**: High-level database management interface
+- **MySQLConnector**: Core MySQL database connection and operations (in mysql_connector.py)
+- **MySQLManager**: High-level MySQL database management interface (in mysql_connector.py)
 - **Table Creation**: Automatic schema creation for healthcare data
 - **Connection Pooling**: Efficient database connection management
 
@@ -40,21 +40,22 @@ The database extension provides:
 
 ## Quick Start
 
-### 1. Setup Database
+### 1. Setup MySQL Database
 ```python
-from database import DatabaseManager
+# Import MySQL classes directly from the module
+from database.mysql_connector import MySQLManager
 
-# Initialize database
-db_manager = DatabaseManager()
-db_manager.initialize_database()
+# Initialize MySQL database
+mysql_manager = MySQLManager()
+mysql_manager.initialize_database()
 ```
 
 ### 2. Migrate Data
 ```python
 from database import DataMigrator
 
-# Migrate CSV to database
-migrator = DataMigrator(db_manager)
+# Migrate CSV to MySQL database
+migrator = DataMigrator(mysql_manager)
 data_files = {'patients': 'diabetic_data.csv'}
 results = migrator.migrate_all_data(data_files)
 ```
@@ -64,7 +65,7 @@ results = migrator.migrate_all_data(data_files)
 from database import QueryExecutor
 
 # Run analytics queries
-query_executor = QueryExecutor(db_manager.connector)
+query_executor = QueryExecutor(mysql_manager.connector)
 demographics = query_executor.execute_demographics_analysis()
 risk_factors = query_executor.execute_risk_factors_analysis()
 ```
@@ -82,7 +83,7 @@ model_result = {
     'f1_score': 0.188,
     'auc_score': 0.639
 }
-db_manager.connector.save_model_result(model_result)
+mysql_manager.connector.save_model_result(model_result)
 ```
 
 ## SQL Query Examples
@@ -139,7 +140,7 @@ SELECT
     AVG(f1_score) as avg_f1_score,
     COUNT(*) as runs_count
 FROM model_results 
-WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'
+WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
 GROUP BY DATE(created_at), model_name, feature_selection_method
 ORDER BY run_date DESC, avg_auc_score DESC
 ```
@@ -149,42 +150,75 @@ ORDER BY run_date DESC, avg_auc_score DESC
 ### Patients Table
 ```sql
 CREATE TABLE patients (
-    patient_id VARCHAR(50) PRIMARY KEY,
-    age INTEGER,
-    gender VARCHAR(10),
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    encounter_id VARCHAR(50),
+    patient_id VARCHAR(50) UNIQUE NOT NULL,
     race VARCHAR(50),
-    admission_type_id INTEGER,
-    discharge_disposition_id INTEGER,
-    admission_source_id INTEGER,
-    time_in_hospital INTEGER,
-    num_lab_procedures INTEGER,
-    num_procedures INTEGER,
-    num_medications INTEGER,
-    number_outpatient INTEGER,
-    number_emergency INTEGER,
-    number_inpatient INTEGER,
+    gender VARCHAR(20),
+    age VARCHAR(10),
+    weight VARCHAR(10),
+    admission_type_id INT,
+    discharge_disposition_id INT,
+    admission_source_id INT,
+    time_in_hospital INT,
+    payer_code VARCHAR(10),
+    medical_specialty VARCHAR(50),
+    num_lab_procedures INT,
+    num_procedures INT,
+    num_medications INT,
+    number_outpatient INT,
+    number_emergency INT,
+    number_inpatient INT,
     diag_1 VARCHAR(10),
     diag_2 VARCHAR(10),
     diag_3 VARCHAR(10),
+    number_diagnoses INT,
+    max_glu_serum VARCHAR(10),
+    A1Cresult VARCHAR(10),
+    metformin VARCHAR(10),
+    repaglinide VARCHAR(10),
+    nateglinide VARCHAR(10),
+    chlorpropamide VARCHAR(10),
+    glimepiride VARCHAR(10),
+    acetohexamide VARCHAR(10),
+    glipizide VARCHAR(10),
+    glyburide VARCHAR(10),
+    tolbutamide VARCHAR(10),
+    pioglitazone VARCHAR(10),
+    rosiglitazone VARCHAR(10),
+    acarbose VARCHAR(10),
+    miglitol VARCHAR(10),
+    troglitazone VARCHAR(10),
+    tolazamide VARCHAR(10),
+    examide VARCHAR(10),
+    citoglipton VARCHAR(10),
+    insulin VARCHAR(10),
+    `glyburide-metformin` VARCHAR(10),
+    `glipizide-metformin` VARCHAR(10),
+    `glimepiride-pioglitazone` VARCHAR(10),
+    `metformin-rosiglitazone` VARCHAR(10),
+    `metformin-pioglitazone` VARCHAR(10),
+    change VARCHAR(10),
+    diabetesMed VARCHAR(10),
     readmitted VARCHAR(10),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
 
 ### Model Results Table
 ```sql
 CREATE TABLE model_results (
-    id SERIAL PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     model_name VARCHAR(50),
     feature_selection_method VARCHAR(50),
-    top_n_features INTEGER,
+    top_n_features INT,
     accuracy DECIMAL(5,4),
-    precision DECIMAL(5,4),
+    precision_score DECIMAL(5,4),
     recall DECIMAL(5,4),
     f1_score DECIMAL(5,4),
     auc_score DECIMAL(5,4),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
 
 ## Configuration
@@ -192,20 +226,22 @@ CREATE TABLE model_results (
 ### Environment Variables
 ```bash
 DB_HOST=localhost
-DB_PORT=5432
+DB_PORT=3306
 DB_NAME=hospital_readmission
-DB_USER=postgres
-DB_PASSWORD=your_password
+DB_USER=root
+DB_PASSWORD=hospital123
 ```
 
-### Database Configuration
+### MySQL Configuration
 ```python
-db_config = {
+mysql_config = {
     'host': 'localhost',
-    'port': '5432',
+    'port': 3306,
     'database': 'hospital_readmission',
-    'user': 'postgres',
-    'password': 'password'
+    'user': 'root',
+    'password': 'hospital123',
+    'charset': 'utf8mb4',
+    'autocommit': True
 }
 ```
 
@@ -213,25 +249,26 @@ db_config = {
 
 ### Complete Analytics Workflow
 ```python
-from database import DatabaseManager, QueryExecutor, DataMigrator
+from database.mysql_connector import MySQLManager
+from database import QueryExecutor, DataMigrator
 
-# 1. Setup database
-db_manager = DatabaseManager()
-db_manager.initialize_database()
+# 1. Setup MySQL database
+mysql_manager = MySQLManager()
+mysql_manager.initialize_database()
 
 # 2. Migrate data
-migrator = DataMigrator(db_manager)
+migrator = DataMigrator(mysql_manager)
 migrator.migrate_csv_to_database('diabetic_data.csv', 'patients')
 
 # 3. Run analytics
-query_executor = QueryExecutor(db_manager.connector)
+query_executor = QueryExecutor(mysql_manager.connector)
 all_analytics = query_executor.execute_all_analytics()
 
 # 4. Generate reports
 for name, df in all_analytics.items():
     df.to_excel(f'outputs/{name}_analysis.xlsx', index=False)
 
-db_manager.close()
+mysql_manager.close()
 ```
 
 ### Data Validation
@@ -247,12 +284,48 @@ else:
     print("Data validation failed:", validation_results)
 ```
 
+### MySQL Connection Example
+```python
+from database.mysql_connector import MySQLConnector
+
+# Create MySQL connector
+mysql_connector = MySQLConnector({
+    'host': 'localhost',
+    'port': 3306,
+    'database': 'hospital_readmission',
+    'user': 'root',
+    'password': 'hospital123'
+})
+
+# Connect to database
+if mysql_connector.connect():
+    # Execute query
+    result = mysql_connector.execute_query("SELECT COUNT(*) FROM patients")
+    print(f"Total patients: {result.iloc[0, 0]}")
+    
+    # Disconnect
+    mysql_connector.disconnect()
+```
+
+## Available Classes
+
+### From Main Module (`from database import ...`)
+- `HospitalReadmissionQueries` - SQL query definitions
+- `QueryExecutor` - Query execution interface
+- `DataValidator` - Data validation utilities
+- `DataTransformer` - Data transformation utilities
+- `DataMigrator` - Data migration workflow
+
+### From MySQL Module (`from database.mysql_connector import ...`)
+- `MySQLConnector` - MySQL database connector
+- `MySQLManager` - MySQL database manager
+
 ## Output Files
 
 The database extension generates:
 - `database_migration_report.txt`: Detailed migration logs
 - `database_analytics_results.xlsx`: Excel file with all analytics results
-- Database tables with persistent data storage
+- MySQL database tables with persistent data storage
 
 ## Skills Demonstrated
 
@@ -261,7 +334,7 @@ This database extension showcases:
 - **Database Design**: Schema design, normalization, indexing considerations
 - **ETL Processes**: Data validation, transformation, loading
 - **Data Analytics**: Healthcare-specific analytics and reporting
-- **Python Database Integration**: SQLAlchemy, psycopg2, pandas integration
+- **Python Database Integration**: mysql-connector-python, SQLAlchemy, pandas integration
 - **Error Handling**: Comprehensive error handling and logging
 - **Documentation**: Clear code documentation and usage examples
 

@@ -1,0 +1,123 @@
+# API Configuration for Hospital Readmission Project
+# This file contains configuration for external APIs used for data enrichment
+
+apis:
+  # ICD-9 API for diagnosis information
+  icd9:
+    base_url: "https://clinicaltables.nlm.nih.gov/api/icd9cm_dx/v3/search"
+    rate_limit: 100  # requests per minute
+    timeout: 30
+    enabled: true
+    description: "National Library of Medicine ICD-9 API for diagnosis codes"
+    
+  # ICD-10 API for diagnosis information (for future use)
+  icd10:
+    base_url: "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search"
+    rate_limit: 100  # requests per minute
+    timeout: 30
+    enabled: false
+    description: "National Library of Medicine ICD-10 API for diagnosis codes"
+    
+  # OpenFDA API for drug information
+  openfda:
+    base_url: "https://api.fda.gov/drug"
+    rate_limit: 1000  # requests per day
+    timeout: 30
+    enabled: true
+    description: "FDA Open Data API for drug information"
+    
+  # Simulated FHIR API for patient data
+  fhir_simulated:
+    base_url: "http://localhost:8000/fhir"  # Simulated endpoint
+    rate_limit: 1000
+    timeout: 10
+    enabled: true
+    description: "Simulated FHIR API for patient demographic data"
+    
+  # Data Quality API for validation
+  data_quality:
+    base_url: "https://api.dataquality.com"  # Simulated endpoint
+    rate_limit: 500
+    timeout: 15
+    enabled: true
+    description: "Data quality validation API"
+
+# Lerner Research Institute API Configuration
+lerner_research:
+  base_url: "https://api.lerner.ccf.org"  # Simulated endpoint
+  rate_limit: 200
+  timeout: 20
+  enabled: true
+  description: "Lerner Research Institute API for patient demographics and clinical data"
+  endpoints:
+    patient_demographics: "/api/v1/patients/demographics"
+    clinical_notes: "/api/v1/patients/notes"
+    lab_results: "/api/v1/patients/labs"
+    research_studies: "/api/v1/studies"
+    outcomes: "/api/v1/outcomes"
+
+# External Vendor API Configuration
+external_vendors:
+  base_url: "https://api.externalvendor.com"  # Simulated endpoint
+  rate_limit: 300
+  timeout: 25
+  enabled: true
+  description: "External vendor APIs for medication, insurance, and provider data"
+  endpoints:
+    medication_info: "/api/v1/medications"
+    insurance_data: "/api/v1/insurance"
+    provider_info: "/api/v1/providers"
+    formulary: "/api/v1/formulary"
+    pricing: "/api/v1/pricing"
+
+# Research Operational Teams API Configuration
+research_teams:
+  base_url: "https://api.research.ccf.org"  # Simulated endpoint
+  rate_limit: 150
+  timeout: 15
+  enabled: true
+  description: "Research operational teams API for study data and protocols"
+  endpoints:
+    study_participants: "/api/v1/studies/participants"
+    protocol_data: "/api/v1/studies/protocols"
+    outcome_measures: "/api/v1/studies/outcomes"
+    enrollment: "/api/v1/studies/enrollment"
+    compliance: "/api/v1/studies/compliance"
+
+# API Authentication (if needed)
+authentication:
+  # API keys (should be stored as environment variables in production)
+  icd10_api_key: "${ICD10_API_KEY}"
+  openfda_api_key: "${OPENFDA_API_KEY}"
+  lerner_api_key: "${LERNER_API_KEY}"
+  vendor_api_key: "${VENDOR_API_KEY}"
+  research_api_key: "${RESEARCH_API_KEY}"
+
+# Rate Limiting Configuration
+rate_limiting:
+  global_rate_limit: 1000  # requests per hour
+  retry_attempts: 3
+  retry_delay: 5  # seconds
+  exponential_backoff: true
+
+# Error Handling Configuration
+error_handling:
+  max_retries: 3
+  timeout_multiplier: 2
+  circuit_breaker_enabled: true
+  circuit_breaker_threshold: 5
+  circuit_breaker_timeout: 60  # seconds
+
+# Logging Configuration
+logging:
+  api_calls: true
+  response_times: true
+  error_details: true
+  rate_limit_warnings: true
+
+# Sampling Configuration
+sampling:
+  fhir_api_sample_size: 69973  # Process all records
+  heterogeneous_api_sample_size: 69973  # Process all records
+  data_quality_sample_size: 69973  # Process all records
+  enable_full_processing: true  # Process all records 
