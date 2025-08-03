@@ -2,8 +2,6 @@
 
 A comprehensive data science pipeline for predicting hospital readmission risk within 30 days of discharge.
 
-## Project Summary
-
 This repository contains a complete hospital readmission prediction system with two distinct branches demonstrating different aspects of data science and data engineering:
 
 ### Main Branch - Machine Learning Pipeline
@@ -15,28 +13,19 @@ This repository contains a complete hospital readmission prediction system with 
 
 ### SQL-Azure-Pipeline Branch - Data Engineering Pipeline
 **Focus**: Enterprise-grade data processing and ETL workflows
-- **Data Engineering**: ETL pipeline with Azure Data Lake integration
+- **Data Engineering**: ETL pipeline with Azure Blob Storage container integration
 - **Database Management**: MySQL-based data processing and storage
 - **Cloud Integration**: Azure Blob Storage for data backup and sharing
 - **Production Ready**: Modular architecture with comprehensive logging and error handling
 
-### Key Differences
-
-| Aspect | Main Branch | SQL-Azure-Pipeline Branch |
-|--------|-------------|---------------------------|
-| **Primary Focus** | Machine Learning & Model Training | Data Engineering & ETL |
-| **Data Processing** | Pandas-based in-memory processing | SQL-based database processing |
-| **Storage** | Local CSV files | Azure Data Lake + MySQL |
-| **Architecture** | Notebook-centric approach | Enterprise ETL pipeline |
-| **Use Case** | Research & Prototyping | Production & Enterprise |
-| **Skills Demonstrated** | Data Science, ML Modeling | Data Engineering, ETL, Cloud |
-
 ## Project Overview
 
-This project demonstrates comprehensive capabilities in healthcare data infrastructure development and research translation, directly aligning with healthcare sector requirements:
+### Problem Statement
+Hospital readmissions within 30 days of discharge are a critical healthcare quality indicator and financial burden. This project addresses the challenge of predicting which patients are at high risk of readmission, enabling healthcare providers to implement targeted interventions and improve patient outcomes.
 
 ### Healthcare Data Infrastructure & Research Translation
-- **Independent Research Data Infrastructure**: Complete ETL pipeline with Azure Data Lake integration for scalable healthcare data processing
+- **Independent Research Data Infrastructure**: Complete ETL pipeline with Azure Blob Storage container integration for scalable healthcare data processing
+- **Data Lake Architecture**: Azure Blob Storage containers for handling large-scale healthcare datasets with cloud-based data processing
 - **Machine Learning Model Hosting**: Automated model training, evaluation, and deployment pipeline with performance monitoring
 - **Cross-Functional Data Integration**: Comprehensive data pipeline handling flat files, APIs, and databases from multiple sources
 - **Rapid Research Translation**: Modular architecture enabling quick deployment of research insights into operational healthcare systems
@@ -49,65 +38,156 @@ This project demonstrates comprehensive capabilities in healthcare data infrastr
 
 ### Technical Implementation
 - **Python Programming**: Advanced Python development for data processing, machine learning, and automation
-- **Advanced SQL Programming**: Complex T-SQL queries for data transformation, analysis, and optimization
-- **Azure Data Lake Integration**: Direct experience with Azure Blob Storage and cloud-based data processing
-- **Large-Scale Dataset Handling**: Processing of 71,518+ patient records with complex healthcare data structures
+- **Advanced SQL Programming**: Complex PostgreSQL queries for data transformation, analysis, and optimization
+- **Azure Blob Storage Integration**: Direct experience with Azure Blob Storage containers for data lake functionality and cloud-based data processing
+- **Large-Scale Dataset Handling**: Processing of 100,000+ patient records with complex healthcare data structures
 - **Healthcare Domain Expertise**: Deep understanding of medical data structures, ICD-9 codes, and patient records
 
-### Documentation & Transparency
-- **Comprehensive Documentation**: Detailed documentation of all data analysis processes, methodologies, and results
-- **Reproducible Workflows**: Version-controlled code and configuration files ensuring research replicability
-- **Transparent Reporting**: Automated report generation with clear insights and recommendations for operational teams
+---
 
-This project transforms original Jupyter notebooks into a modular, reusable data science pipeline with the following key capabilities:
+## Machine Learning Pipeline - Main Focus
 
-- **Data Loading & Merging**: Automated loading and merging of multiple data sources
-- **Data Preprocessing**: Feature engineering, data cleaning, encoding, and standardization
-- **Feature Selection**: Multiple feature selection methods (L1 regularization, mutual information, tree model importance)
-- **Model Training**: Multiple machine learning models (Logistic Regression, Random Forest, XGBoost)
-- **Model Evaluation**: Cross-validation, test set evaluation, performance comparison
-- **Result Visualization**: Feature importance plots, model comparison charts
-- **Report Generation**: Automated generation of detailed training and evaluation reports
+### Exploratory Data Analysis (EDA)
+- **Comprehensive Data Profiling**: Analysis of 71,518 patient records with 50+ features
+- **Missing Value Analysis**: Systematic investigation of data quality issues
+- **Statistical Analysis**: Distribution analysis, correlation studies, and outlier detection
+- **Data Visualization**: Interactive charts and plots for data insights
+- **Data Quality Assessment**: Systematic evaluation of data completeness and accuracy
 
-## Project Structure
+### Advanced Feature Engineering
+- **Demographic Features**: 
+  - Age group categorization and binning
+  - Gender encoding and demographic clustering
+  - Socioeconomic factor analysis
+- **Clinical Features**: 
+  - ICD-9 diagnosis code aggregation and categorization
+  - Comorbidity indices calculation
+  - Medical specialty classification
+  - Length of stay analysis
+- **Medication Features**: 
+  - Drug interaction patterns and combinations
+  - Medication change tracking
+  - Diabetes medication effectiveness analysis
+- **Temporal Features**: 
+  - Time-based patient characteristics
+  - Seasonal admission patterns
+  - Readmission timing analysis
+
+### Sophisticated Feature Selection
+- **Multiple Feature Selection Methods**:
+  - **L1 Regularization (Lasso)**: Sparse feature selection for interpretability
+  - **Mutual Information**: Information-theoretic feature ranking
+  - **Tree-based Importance**: Random Forest and XGBoost feature importance
+  - **Recursive Feature Elimination**: Iterative feature selection with cross-validation
+- **Feature Validation**: Comprehensive cross-validation of all selection methods
+- **Performance Impact Analysis**: Maintaining model performance while reducing complexity
+
+### Advanced Model Training & Optimization
+
+#### Multiple Machine Learning Algorithms
+- **Logistic Regression**: Baseline model with high interpretability
+- **Random Forest**: Ensemble method with robust feature importance
+- **XGBoost**: Gradient boosting for superior performance
+- **Support Vector Machines**: For complex decision boundaries
+- **Neural Networks**: Deep learning approach for pattern recognition
+
+#### Sophisticated Training Techniques
+- **Cross-Validation**: 5-fold cross-validation for robust evaluation
+- **Hyperparameter Tuning**: 
+  - Grid search and random search optimization
+  - Bayesian optimization for efficient parameter search
+  - Learning rate scheduling and early stopping
+- **Ensemble Methods**: 
+  - Voting classifiers (hard and soft voting)
+  - Stacking with meta-learners
+  - Bagging and boosting combinations
+- **Model Stacking**: Multi-level ensemble with meta-learning
+
+#### Advanced Model Evaluation
+- **Comprehensive Metrics**: AUC-ROC, F1-Score, Precision, Recall, Accuracy
+- **Statistical Testing**: McNemar's test, paired t-tests for model comparison
+- **Cross-Validation Analysis**: Stratified k-fold with multiple metrics
+- **Bootstrap Confidence Intervals**: For robust performance estimation
+
+### Model Performance & Analysis
+
+#### Outstanding Model Performance
+#### ROC-AUC Score
+|              | L1    | MI    | Tree  |
+| ------------ | ----- | ----- | ----- |
+| LogisticReg  | 0.605 | 0.601 | 0.639 |
+| RandomForest | 0.574 | 0.560 | 0.576 |
+| XGBoost      | 0.577 | 0.591 | 0.606 |
+
+#### F1 Score
+|              | L1    | MI    | Tree  |
+| ------------ | ----- | ----- | ----- |
+| LogisticReg  | 0.195 | 0.040 | 0.014 |
+| RandomForest | 0.182 | 0.003 | 0.005 |
+| XGBoost      | 0.182 | 0.012 | 0.006 |
+
+
+#### Model Interpretability
+- **Feature Importance Analysis**: Identifying key predictors for readmission
+- **Partial Dependence Plots**: Visualizing feature effects on predictions
+- **Local Interpretable Model Explanations**: Individual prediction explanations
+
+### Advanced Analytics & Research
+
+#### Statistical Analysis
+- **Hypothesis Testing**: Statistical significance of feature relationships
+- **Correlation Analysis**: Understanding feature interdependencies
+- **Outlier Detection**: Identifying and handling anomalous cases
+- **Distribution Analysis**: Understanding data characteristics
+
+#### Model Diagnostics
+- **Residual Analysis**: Checking model assumptions
+- **Overfitting Detection**: Monitoring training vs validation performance
+- **Bias-Variance Trade-off**: Optimizing model complexity
+- **Learning Curves**: Understanding model learning behavior
+
+## Machine Learning Architecture
 
 ```
-rp0609/
-├── src/                        # Source code directory
-│   ├── etl/                    # ETL pipeline modules
-│   │   ├── etl_pipeline_new.py    # Main ETL orchestrator
-│   │   ├── dynamic_column_cleaner.py  # Dynamic column cleaning
-│   │   ├── data_pre_cleaner.py    # Data pre-cleaning module
-│   │   └── sql_processing/     # SQL processing scripts
-│   ├── api_integration/        # API integration modules
-│   ├── utils/                  # Utility modules
-│   ├── data_ingestion/         # Data ingestion modules
-│   └── ml_pipeline/            # Machine learning pipeline modules
-├── config/                     # Configuration files
-│   ├── database_config.yaml       # Database configuration
-│   ├── azure_config.yaml          # Azure storage configuration
-│   └── api_config.yaml            # API configuration
-├── docs/                       # Documentation
-├── logs/                       # Log files
-├── database/                   # Database related files
-├── tests/                      # Test files
-├── pipeline_config.py             # Pipeline configuration
-├── data_loader.py                 # Data loading module
-├── data_preprocessor.py           # Data preprocessing module
-├── feature_selector.py            # Feature selection module
-├── main_pipeline.py               # Main pipeline orchestrator
-├── run_complete_etl_pipeline.py   # One-click ETL pipeline
-├── run_api_integration.py         # API integration runner
-├── requirements.txt               # Project dependencies
-└── README.md                      # Project documentation
+Advanced ML Pipeline
+├── Data Analysis & EDA
+│   ├── Data Profiling & Quality Assessment
+│   ├── Statistical Analysis & Visualization
+│   ├── Missing Value Analysis
+│   └── Correlation & Distribution Studies
+├── Feature Engineering
+│   ├── Demographic Feature Engineering
+│   ├── Clinical Feature Engineering
+│   ├── Medication Interaction Features
+│   └── Temporal Feature Engineering
+├── Feature Selection
+│   ├── L1 Regularization (Lasso)
+│   ├── Mutual Information Analysis
+│   ├── Tree-based Importance
+│   └── Recursive Feature Elimination
+├── Model Training
+│   ├── Multiple Algorithm Training
+│   ├── Hyperparameter Optimization
+│   ├── Cross-validation
+│   └── Ensemble Methods
+├── Model Evaluation
+│   ├── Performance Metrics
+│   ├── Statistical Comparison
+│   ├── Feature Importance Analysis
+│   └── Model Interpretability
+└── Model Deployment
+    ├── Model Serialization
+    ├── Performance Monitoring
+    ├── Automated Retraining
+    └── API Development
 ```
 
 ## Quick Start
 
-### 1. Clone the Project
+### 1. Clone the Repository
 ```bash
-git clone <repository-url>
-cd rp0609
+git clone https://github.com/sarcorlisy/GHM_RESEARCH_PROJECT.git
+cd GHM_RESEARCH_PROJECT
 ```
 
 ### 2. Install Dependencies
@@ -115,207 +195,145 @@ cd rp0609
 pip install -r requirements.txt
 ```
 
-### 3. Configure Environment
-Create a `.env` file in the project root:
-```env
-DB_HOST=localhost
-DB_PORT=3306
-DB_NAME=hospital_readmission
-DB_USER=root
-DB_PASSWORD=your_password
-AZURE_CONNECTION_STRING=your_azure_connection_string
-```
-
-### 4. Prepare Data Files
-Ensure the following data files are available:
-- `diabetic_data.csv` - Main hospital dataset
-- `IDS_mapping.csv` - ID mapping data
-- `ccs_icd9_mapping.csv` - ICD-9 mapping data
-
-## Usage Guide
-
-### Option 1: Complete ETL Pipeline (Recommended)
+### 3. Run Complete ML Pipeline
 ```bash
-python run_complete_etl_pipeline.py
-```
-**Features**: Download from Azure → Preprocess → Import to SQL → Mapping → Cleaning → Business cleaning → Upload back to Azure
-
-### Option 2: Individual Modules
-```bash
-# Data preprocessing
-python data_preprocessor.py
-
-# Feature selection
-python feature_selector.py
-
-# Complete ML pipeline
+# Run the complete machine learning pipeline
 python main_pipeline.py
 
-# API integration
-python run_api_integration.py
+# Or run individual ML components
+python data_preprocessor.py      # Data preprocessing & EDA
+python feature_selector.py       # Feature selection methods
+python model_trainer.py          # Advanced model training
+python result_analyzer.py        # Results analysis & visualization
 ```
 
-### Option 3: ETL Pipeline Steps
-```bash
-# Run specific ETL steps
-python src/etl/etl_pipeline_new.py
-```
-
-## Pipeline Workflow
-
-### Phase 1: Data Import & Preprocessing
-- **Download from Azure**: Raw data retrieval
-- **8-Step Data Cleaning**:
-  1. Handle missing values
-  2. Handle special characters ('?' → 'Unknown')
-  3. Standardize patient IDs
-  4. Process age fields (extract midpoints)
-  5. Process numeric fields
-  6. Standardize medication fields
-  7. Process diagnosis fields
-  8. Add timestamps
-- **Import to MySQL**: Store in `patients` table
-
-### Phase 2: Data Mapping
-- **Download mapping data** from Azure
-- **Create mapping tables**:
-  - `admission_type_mapping`
-  - `discharge_disposition_mapping`
-  - `admission_source_mapping`
-- **Create enriched data** in `patients_mapped` table
-- **Upload to Azure** for backup
-
-### Phase 3: Dynamic Column Cleaning
-- **Analyze invalid values** in each column
-- **Remove high invalid rate columns** (>50% invalid values)
-- **Create cleaned table** `patients_cleaned`
-- **Upload to Azure**
-
-### Phase 4: Business Rule Cleaning
-- **Apply business rules** to filter records
-- **Create business cleaned table** `patients_business_cleaned`
-- **Upload to Azure**
-
-### Phase 5: Feature Engineering
-- **Create ML features** for model training
-- **Create features table** `patients_features`
-- **Upload to Azure**
-
-## Data Flow
+## Project Structure
 
 ```
-Azure (raw-data) 
-    ↓
-patients (MySQL) 
-    ↓
-patients_mapped (MySQL + Azure)
-    ↓
-patients_cleaned (MySQL + Azure) - Dynamic column cleaning
-    ↓
-patients_business_cleaned (MySQL + Azure) - Business rules
-    ↓
-patients_features (MySQL + Azure) - Feature engineering
-    ↓
-ML Pipeline (Python) - Model training & evaluation
+rp0609/
+├── Machine Learning Pipeline (Main Focus)
+│   ├── data_preprocessor.py        # Data preprocessing & EDA
+│   ├── feature_selector.py         # Advanced feature selection
+│   ├── model_trainer.py            # Sophisticated ML training
+│   ├── main_pipeline.py            # Complete ML pipeline orchestrator
+│   └── result_analyzer.py          # Results analysis & visualization
+├── Data Engineering (Secondary)
+│   ├── src/etl/                    # ETL pipeline modules
+│   ├── run_complete_etl_pipeline.py # ETL pipeline runner
+│   └── database/                   # Database utilities
+├── ML Outputs & Results
+│   ├── models/                     # Trained model files
+│   ├── reports/                    # ML analysis reports
+│   ├── visualizations/             # ML charts and plots
+│   └── logs/                       # ML execution logs
+├── Documentation
+│   ├── docs/                       # Detailed documentation
+│   ├── USAGE_GUIDE.md              # Usage instructions
+│   └── pipeline_structure.md       # Architecture overview
+└── Configuration
+    ├── config/                     # Configuration files
+    ├── requirements.txt            # Dependencies
+    └── pipeline_config.py          # ML pipeline settings
 ```
 
-## Feature Categories
+## Detailed ML Workflow
 
-The project organizes features into the following categories:
-
-- **Demographic**: Age, gender, race, etc.
-- **Administrative**: Admission type, discharge disposition, etc.
-- **Clinical**: Diagnoses, comorbidities, etc.
-- **Utilization**: Length of stay, number of procedures, etc.
-- **Medication**: Diabetes medications, medication changes, etc.
-
-## Model Performance
-
-Typical performance metrics on test set:
-
-| Model | AUC | F1-Score | Accuracy | Precision | Recall |
-|-------|-----|----------|----------|-----------|--------|
-| Logistic Regression | 0.670 | 0.580 | 0.65 | 0.62 | 0.55 |
-| Random Forest | 0.965 | 0.933 | 0.94 | 0.94 | 0.93 |
-| XGBoost | 0.958 | 0.931 | 0.93 | 0.93 | 0.93 |
-
-## Output Files
-
-After running the pipeline, the following files are generated:
-
-### Data Files
-- `merged_data.csv`: Merged raw data
-- `X_train.csv`, `X_val.csv`, `X_test.csv`: Preprocessed feature data
-- `y_train.csv`, `y_val.csv`, `y_test.csv`: Target variable data
-
-### Model Files
-- `models/LogisticRegression.joblib`: Logistic regression model
-- `models/RandomForest.joblib`: Random forest model
-- `models/XGBoost.joblib`: XGBoost model
-
-### Reports & Visualizations
-- `model_report.txt`: Model training report
-- `model_comparison.png`: Model performance comparison
-- `feature_importance.png`: Feature importance visualization
-- `pipeline.log`: Detailed execution log
-
-## Configuration
-
-Modify settings in `pipeline_config.py`:
-
+### Phase 1: Exploratory Data Analysis
 ```python
-MODEL_CONFIG = {
-    'test_size': 0.2,           # Test set ratio
-    'val_size': 0.2,            # Validation set ratio
-    'random_state': 42,         # Random seed
-    'cv_folds': 5,              # Cross-validation folds
-    'feature_selection_top_n': 15  # Number of selected features
-}
+# Comprehensive data analysis
+python data_preprocessor.py
 ```
+- **Data Profiling**: Understand data structure and quality
+- **Missing Value Analysis**: Identify and handle data gaps
+- **Statistical Analysis**: Distribution and correlation studies
+- **Visualization**: Create insightful charts and plots
 
-## Customization
-
-### Adding New Feature Selection Methods
+### Phase 2: Advanced Feature Engineering
 ```python
-def select_features_by_new_method(self, X, y, top_n=15):
-    # Implement new feature selection logic
-    pass
+# Sophisticated feature creation
+python feature_selector.py
 ```
+- **Demographic Features**: Age groups, gender encoding, socioeconomic factors
+- **Clinical Features**: Diagnosis aggregation, comorbidity indices, medical specialties
+- **Medication Features**: Drug interaction patterns, medication effectiveness
+- **Temporal Features**: Time-based patient characteristics, seasonal patterns
 
-### Adding New Models
+### Phase 3: Feature Selection & Optimization
+- **L1 Regularization**: Sparse feature selection for interpretability
+- **Mutual Information**: Information-theoretic feature ranking
+- **Tree-based Selection**: Random Forest and XGBoost importance scores
+- **Cross-validation**: Robust validation of feature selection methods
+
+### Phase 4: Advanced Model Training
 ```python
-def get_models(self):
-    return {
-        # Existing models...
-        'NewModel': NewModelClass(random_state=self.random_state)
-    }
+# Sophisticated ML training
+python model_trainer.py
 ```
+- **Multiple Algorithms**: Logistic Regression, Random Forest, XGBoost, SVM, Neural Networks
+- **Hyperparameter Tuning**: Grid search, random search, Bayesian optimization
+- **Cross-validation**: 5-fold cross-validation for robust evaluation
+- **Ensemble Methods**: Voting, stacking, bagging, and boosting
 
-### Adding New Features
-```python
-def create_new_feature(self, df):
-    # Implement new feature creation logic
-    return df
-```
+### Phase 5: Comprehensive Model Evaluation
+- **Performance Metrics**: AUC, F1-Score, Accuracy, Precision, Recall
+- **Statistical Comparison**: McNemar's test, paired t-tests
+- **Feature Importance**: SHAP values, partial dependence plots
+- **Error Analysis**: Investigation of misclassified cases
 
-## Troubleshooting
+## Machine Learning Capabilities Demonstrated
 
-### Common Issues
+### Advanced ML Techniques
+- **Ensemble Learning**: Random Forest, XGBoost, and ensemble combinations
+- **Hyperparameter Optimization**: Automated parameter tuning
+- **Cross-validation**: Robust model evaluation strategies
+- **Feature Engineering**: Creative feature creation and transformation
 
-1. **Memory Issues**: For large datasets, reduce feature selection count or use data sampling
-2. **Package Conflicts**: Use virtual environment and follow `requirements.txt` strictly
-3. **Missing Data Files**: Ensure all required data files are in correct locations
-4. **Database Connection**: Check database credentials and connection settings
+### Model Development Expertise
+- **Algorithm Selection**: Choosing appropriate models for healthcare data
+- **Hyperparameter Tuning**: Optimizing model performance
+- **Model Comparison**: Statistical evaluation of different approaches
+- **Feature Selection**: Identifying most important predictors
 
-### Logs
-Check `pipeline.log` for detailed execution information and error messages.
+### Performance Optimization
+- **Ensemble Methods**: Combining multiple models for better performance
+- **Model Stacking**: Multi-level ensemble with meta-learning
+- **Error Analysis**: Understanding and improving model weaknesses
+- **Interpretability**: Making models explainable for healthcare applications
 
-## Documentation
+## Healthcare ML Expertise
+
+### Medical Data Understanding
+- **ICD-9 Codes**: Processing and aggregating diagnosis codes
+- **Medication Data**: Understanding drug interactions and patterns
+- **Patient Demographics**: Age, gender, and socioeconomic factors
+- **Clinical Variables**: Length of stay, procedures, and diagnoses
+
+### Healthcare Predictive Analytics
+- **Risk Prediction**: Identifying high-risk patients for readmission
+- **Clinical Decision Support**: Providing insights for healthcare providers
+- **Quality Improvement**: Supporting hospital quality initiatives
+- **Resource Optimization**: Helping optimize healthcare resource allocation
+
+## Advanced ML Features
+
+### Automated ML Pipeline
+- **End-to-End Processing**: From raw data to trained models
+- **Reproducible Results**: Version-controlled and documented workflows
+- **Scalable Architecture**: Modular design for easy extension
+- **Error Handling**: Robust error handling and logging
+
+### Model Deployment Ready
+- **Model Serialization**: Save and load trained models
+- **API Development**: RESTful API for model serving
+- **Performance Monitoring**: Track model performance over time
+- **Automated Retraining**: Scheduled model updates
+
+## Documentation & Resources
 
 - **USAGE_GUIDE.md**: Detailed usage instructions
-- **CORRECTED_DATA_FLOW.md**: Data flow documentation
 - **pipeline_structure.md**: Architecture overview
 - **docs/**: Additional documentation
+- **Jupyter Notebooks**: Interactive ML analysis examples
 
 ## Contributing
 
@@ -343,4 +361,4 @@ For questions or suggestions:
 
 ## Tags
 
-`#data-science` `#machine-learning` `#healthcare` `#etl-pipeline` `#python` `#sql` `#azure`
+`#machine-learning` `#data-science` `#healthcare` `#feature-engineering` `#model-training` `#python` `#predictive-modeling` `#hospital-analytics` `#ensemble-learning` `#hyperparameter-tuning`
