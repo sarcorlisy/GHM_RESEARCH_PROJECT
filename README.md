@@ -1,271 +1,346 @@
 # Hospital Readmission Prediction Pipeline
 
-一个完整的医院再入院预测数据科学pipeline，用于预测患者在出院后30天内再次入院的风险。
+A comprehensive data science pipeline for predicting hospital readmission risk within 30 days of discharge.
 
-## 项目概述
+## Project Summary
 
-本项目将原始的Jupyter notebook重构为一个模块化的、可重用的数据科学pipeline，包含以下主要功能：
+This repository contains a complete hospital readmission prediction system with two distinct branches demonstrating different aspects of data science and data engineering:
 
-- **数据加载和合并**: 自动加载和合并多个数据源
-- **数据预处理**: 特征工程、数据清洗、编码和标准化
-- **特征选择**: 多种特征选择方法（L1正则化、互信息、树模型重要性）
-- **模型训练**: 多种机器学习模型（逻辑回归、随机森林、XGBoost）
-- **模型评估**: 交叉验证、测试集评估、性能比较
-- **结果可视化**: 特征重要性图、模型比较图
-- **报告生成**: 自动生成详细的训练和评估报告
+### Main Branch - Machine Learning Pipeline
+**Focus**: Complete data science workflow from raw data to trained models
+- **Data Science**: Feature engineering, model training, and evaluation
+- **Machine Learning**: Multiple algorithms (Logistic Regression, Random Forest, XGBoost)
+- **Research**: Exploratory data analysis, feature selection, and model comparison
+- **Output**: Trained models, performance metrics, and visualization reports
 
-## 项目结构
+### SQL-Azure-Pipeline Branch - Data Engineering Pipeline
+**Focus**: Enterprise-grade data processing and ETL workflows
+- **Data Engineering**: ETL pipeline with Azure Data Lake integration
+- **Database Management**: MySQL-based data processing and storage
+- **Cloud Integration**: Azure Blob Storage for data backup and sharing
+- **Production Ready**: Modular architecture with comprehensive logging and error handling
+
+### Key Differences
+
+| Aspect | Main Branch | SQL-Azure-Pipeline Branch |
+|--------|-------------|---------------------------|
+| **Primary Focus** | Machine Learning & Model Training | Data Engineering & ETL |
+| **Data Processing** | Pandas-based in-memory processing | SQL-based database processing |
+| **Storage** | Local CSV files | Azure Data Lake + MySQL |
+| **Architecture** | Notebook-centric approach | Enterprise ETL pipeline |
+| **Use Case** | Research & Prototyping | Production & Enterprise |
+| **Skills Demonstrated** | Data Science, ML Modeling | Data Engineering, ETL, Cloud |
+
+## Project Overview
+
+This project demonstrates comprehensive capabilities in healthcare data infrastructure development and research translation, directly aligning with healthcare sector requirements:
+
+### Healthcare Data Infrastructure & Research Translation
+- **Independent Research Data Infrastructure**: Complete ETL pipeline with Azure Data Lake integration for scalable healthcare data processing
+- **Machine Learning Model Hosting**: Automated model training, evaluation, and deployment pipeline with performance monitoring
+- **Cross-Functional Data Integration**: Comprehensive data pipeline handling flat files, APIs, and databases from multiple sources
+- **Rapid Research Translation**: Modular architecture enabling quick deployment of research insights into operational healthcare systems
+
+### Advanced Analytics & Process Optimization
+- **Predictive Modeling**: Machine learning models for hospital readmission prediction, directly improving healthcare operational efficiency
+- **Statistical Analysis**: Comprehensive data analysis including trend identification, pattern recognition, and correlation analysis
+- **Process Automation**: Automated ETL workflows reducing manual data processing time and improving data accuracy
+- **Data Quality Assurance**: Multi-stage data validation and cleaning processes ensuring data reliability
+
+### Technical Implementation
+- **Python Programming**: Advanced Python development for data processing, machine learning, and automation
+- **Advanced SQL Programming**: Complex T-SQL queries for data transformation, analysis, and optimization
+- **Azure Data Lake Integration**: Direct experience with Azure Blob Storage and cloud-based data processing
+- **Large-Scale Dataset Handling**: Processing of 71,518+ patient records with complex healthcare data structures
+- **Healthcare Domain Expertise**: Deep understanding of medical data structures, ICD-9 codes, and patient records
+
+### Documentation & Transparency
+- **Comprehensive Documentation**: Detailed documentation of all data analysis processes, methodologies, and results
+- **Reproducible Workflows**: Version-controlled code and configuration files ensuring research replicability
+- **Transparent Reporting**: Automated report generation with clear insights and recommendations for operational teams
+
+This project transforms original Jupyter notebooks into a modular, reusable data science pipeline with the following key capabilities:
+
+- **Data Loading & Merging**: Automated loading and merging of multiple data sources
+- **Data Preprocessing**: Feature engineering, data cleaning, encoding, and standardization
+- **Feature Selection**: Multiple feature selection methods (L1 regularization, mutual information, tree model importance)
+- **Model Training**: Multiple machine learning models (Logistic Regression, Random Forest, XGBoost)
+- **Model Evaluation**: Cross-validation, test set evaluation, performance comparison
+- **Result Visualization**: Feature importance plots, model comparison charts
+- **Report Generation**: Automated generation of detailed training and evaluation reports
+
+## Project Structure
 
 ```
 rp0609/
-├── pipeline_config.py          # 配置文件
-├── data_loader.py              # 数据加载模块
-├── data_preprocessor.py        # 数据预处理模块
-├── feature_selector.py         # 特征选择模块
-├── model_trainer.py            # 模型训练模块
-├── main_pipeline.py            # 主pipeline文件
-├── requirements.txt            # 项目依赖
-├── README.md                   # 项目文档
-├── outputs/                    # 输出目录
-│   ├── models/                 # 保存的模型
-│   ├── *.png                   # 可视化图表
-│   ├── *.txt                   # 报告文件
-│   └── *.csv                   # 处理后的数据
-└── data/                       # 数据文件
-    ├── diabetic_data.csv       # 主要数据集
-    ├── IDS_mapping.csv         # ID映射数据
-    └── ccs_icd9_mapping.csv    # ICD-9映射数据
+├── src/                        # Source code directory
+│   ├── etl/                    # ETL pipeline modules
+│   │   ├── etl_pipeline_new.py    # Main ETL orchestrator
+│   │   ├── dynamic_column_cleaner.py  # Dynamic column cleaning
+│   │   ├── data_pre_cleaner.py    # Data pre-cleaning module
+│   │   └── sql_processing/     # SQL processing scripts
+│   ├── api_integration/        # API integration modules
+│   ├── utils/                  # Utility modules
+│   ├── data_ingestion/         # Data ingestion modules
+│   └── ml_pipeline/            # Machine learning pipeline modules
+├── config/                     # Configuration files
+│   ├── database_config.yaml       # Database configuration
+│   ├── azure_config.yaml          # Azure storage configuration
+│   └── api_config.yaml            # API configuration
+├── docs/                       # Documentation
+├── logs/                       # Log files
+├── database/                   # Database related files
+├── tests/                      # Test files
+├── pipeline_config.py             # Pipeline configuration
+├── data_loader.py                 # Data loading module
+├── data_preprocessor.py           # Data preprocessing module
+├── feature_selector.py            # Feature selection module
+├── main_pipeline.py               # Main pipeline orchestrator
+├── run_complete_etl_pipeline.py   # One-click ETL pipeline
+├── run_api_integration.py         # API integration runner
+├── requirements.txt               # Project dependencies
+└── README.md                      # Project documentation
 ```
 
-## 安装和设置
+## Quick Start
 
-1. **克隆项目**
+### 1. Clone the Project
 ```bash
 git clone <repository-url>
 cd rp0609
 ```
 
-2. **安装依赖**
+### 2. Install Dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-3. **准备数据文件**
-确保以下数据文件在项目根目录中：
-- `diabetic_data.csv`
-- `IDS_mapping.csv`
-- `ccs_icd9_mapping.csv`
-
-## 使用方法
-
-### 1. 运行完整pipeline
-
-```bash
-python main_pipeline.py
+### 3. Configure Environment
+Create a `.env` file in the project root:
+```env
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=hospital_readmission
+DB_USER=root
+DB_PASSWORD=your_password
+AZURE_CONNECTION_STRING=your_azure_connection_string
 ```
 
-这将执行完整的数据科学流程：
-- 数据加载和合并
-- 特征工程和预处理
-- 特征选择
-- 模型训练和评估
-- 生成报告和可视化
+### 4. Prepare Data Files
+Ensure the following data files are available:
+- `diabetic_data.csv` - Main hospital dataset
+- `IDS_mapping.csv` - ID mapping data
+- `ccs_icd9_mapping.csv` - ICD-9 mapping data
 
-### 2. 使用预测功能
+## Usage Guide
 
+### Option 1: Complete ETL Pipeline (Recommended)
 ```bash
-python main_pipeline.py --predict new_data.csv --model RandomForest
+python run_complete_etl_pipeline.py
 ```
+**Features**: Download from Azure → Preprocess → Import to SQL → Mapping → Cleaning → Business cleaning → Upload back to Azure
 
-### 3. 单独运行各个模块
-
-你也可以单独运行各个模块进行测试：
-
-```python
-# 数据加载
-python data_loader.py
-
-# 数据预处理
+### Option 2: Individual Modules
+```bash
+# Data preprocessing
 python data_preprocessor.py
 
-# 特征选择
+# Feature selection
 python feature_selector.py
 
-# 模型训练
-python model_trainer.py
+# Complete ML pipeline
+python main_pipeline.py
+
+# API integration
+python run_api_integration.py
 ```
 
-## Pipeline流程
+### Option 3: ETL Pipeline Steps
+```bash
+# Run specific ETL steps
+python src/etl/etl_pipeline_new.py
+```
 
-### 步骤1: 数据加载 (`data_loader.py`)
-- 加载糖尿病数据集
-- 加载ID映射数据
-- 合并所有数据表
-- 生成数据摘要报告
+## Pipeline Workflow
 
-### 步骤2: 数据预处理 (`data_preprocessor.py`)
-- **特征工程**:
-  - 创建年龄相关特征（年龄中点、年龄组）
-  - 创建诊断分类特征（ICD-9代码分类）
-  - 创建合并症特征
-  - 创建就诊相关特征（就诊索引、滚动平均）
-- **数据清洗**:
-  - 处理缺失值
-  - 处理特殊字符
-- **数据转换**:
-  - 分类特征编码
-  - 数值特征标准化
-  - 目标变量准备
-- **数据平衡**:
-  - 使用SMOTE处理类别不平衡
+### Phase 1: Data Import & Preprocessing
+- **Download from Azure**: Raw data retrieval
+- **8-Step Data Cleaning**:
+  1. Handle missing values
+  2. Handle special characters ('?' → 'Unknown')
+  3. Standardize patient IDs
+  4. Process age fields (extract midpoints)
+  5. Process numeric fields
+  6. Standardize medication fields
+  7. Process diagnosis fields
+  8. Add timestamps
+- **Import to MySQL**: Store in `patients` table
 
-### 步骤3: 特征选择 (`feature_selector.py`)
-- **L1正则化特征选择**: 使用逻辑回归的L1惩罚
-- **互信息特征选择**: 基于互信息分数
-- **树模型特征重要性**: 使用随机森林的特征重要性
-- 生成特征重要性可视化
-- 保存选择的特征
+### Phase 2: Data Mapping
+- **Download mapping data** from Azure
+- **Create mapping tables**:
+  - `admission_type_mapping`
+  - `discharge_disposition_mapping`
+  - `admission_source_mapping`
+- **Create enriched data** in `patients_mapped` table
+- **Upload to Azure** for backup
 
-### 步骤4: 模型训练 (`model_trainer.py`)
-- **模型类型**:
-  - 逻辑回归
-  - 随机森林
-  - XGBoost
-- **评估方法**:
-  - 5折交叉验证
-  - 验证集评估
-  - 测试集评估
-- **性能指标**:
-  - 准确率 (Accuracy)
-  - 精确率 (Precision)
-  - 召回率 (Recall)
-  - F1分数
-  - AUC-ROC
+### Phase 3: Dynamic Column Cleaning
+- **Analyze invalid values** in each column
+- **Remove high invalid rate columns** (>50% invalid values)
+- **Create cleaned table** `patients_cleaned`
+- **Upload to Azure**
 
-## 输出文件
+### Phase 4: Business Rule Cleaning
+- **Apply business rules** to filter records
+- **Create business cleaned table** `patients_business_cleaned`
+- **Upload to Azure**
 
-运行pipeline后，会在`outputs/`目录中生成以下文件：
+### Phase 5: Feature Engineering
+- **Create ML features** for model training
+- **Create features table** `patients_features`
+- **Upload to Azure**
 
-### 数据文件
-- `merged_data.csv`: 合并后的原始数据
-- `X_train.csv`, `X_val.csv`, `X_test.csv`: 预处理后的特征数据
-- `y_train.csv`, `y_val.csv`, `y_test.csv`: 目标变量数据
+## Data Flow
 
-### 模型文件
-- `models/LogisticRegression.joblib`: 逻辑回归模型
-- `models/RandomForest.joblib`: 随机森林模型
-- `models/XGBoost.joblib`: XGBoost模型
+```
+Azure (raw-data) 
+    ↓
+patients (MySQL) 
+    ↓
+patients_mapped (MySQL + Azure)
+    ↓
+patients_cleaned (MySQL + Azure) - Dynamic column cleaning
+    ↓
+patients_business_cleaned (MySQL + Azure) - Business rules
+    ↓
+patients_features (MySQL + Azure) - Feature engineering
+    ↓
+ML Pipeline (Python) - Model training & evaluation
+```
 
-### 特征选择结果
-- `selected_features_top15.json`: 选择的特征列表
-- `feature_importance.png`: 特征重要性可视化
+## Feature Categories
 
-### 报告和可视化
-- `model_report.txt`: 模型训练报告
-- `model_comparison.png`: 模型性能比较图
-- `final_pipeline_report.txt`: 完整的pipeline报告
-- `pipeline.log`: 详细的执行日志
+The project organizes features into the following categories:
 
-## 配置选项
+- **Demographic**: Age, gender, race, etc.
+- **Administrative**: Admission type, discharge disposition, etc.
+- **Clinical**: Diagnoses, comorbidities, etc.
+- **Utilization**: Length of stay, number of procedures, etc.
+- **Medication**: Diabetes medications, medication changes, etc.
 
-在`pipeline_config.py`中可以修改以下配置：
+## Model Performance
+
+Typical performance metrics on test set:
+
+| Model | AUC | F1-Score | Accuracy | Precision | Recall |
+|-------|-----|----------|----------|-----------|--------|
+| Logistic Regression | 0.670 | 0.580 | 0.65 | 0.62 | 0.55 |
+| Random Forest | 0.965 | 0.933 | 0.94 | 0.94 | 0.93 |
+| XGBoost | 0.958 | 0.931 | 0.93 | 0.93 | 0.93 |
+
+## Output Files
+
+After running the pipeline, the following files are generated:
+
+### Data Files
+- `merged_data.csv`: Merged raw data
+- `X_train.csv`, `X_val.csv`, `X_test.csv`: Preprocessed feature data
+- `y_train.csv`, `y_val.csv`, `y_test.csv`: Target variable data
+
+### Model Files
+- `models/LogisticRegression.joblib`: Logistic regression model
+- `models/RandomForest.joblib`: Random forest model
+- `models/XGBoost.joblib`: XGBoost model
+
+### Reports & Visualizations
+- `model_report.txt`: Model training report
+- `model_comparison.png`: Model performance comparison
+- `feature_importance.png`: Feature importance visualization
+- `pipeline.log`: Detailed execution log
+
+## Configuration
+
+Modify settings in `pipeline_config.py`:
 
 ```python
 MODEL_CONFIG = {
-    'test_size': 0.2,           # 测试集比例
-    'val_size': 0.2,            # 验证集比例
-    'random_state': 42,         # 随机种子
-    'cv_folds': 5,              # 交叉验证折数
-    'feature_selection_top_n': 15  # 特征选择数量
+    'test_size': 0.2,           # Test set ratio
+    'val_size': 0.2,            # Validation set ratio
+    'random_state': 42,         # Random seed
+    'cv_folds': 5,              # Cross-validation folds
+    'feature_selection_top_n': 15  # Number of selected features
 }
 ```
 
-## 特征分类
+## Customization
 
-项目中的特征按以下类别组织：
-
-- **Demographic**: 人口统计学特征（年龄、性别、种族等）
-- **Administrative**: 管理特征（入院类型、出院处置等）
-- **Clinical**: 临床特征（诊断、合并症等）
-- **Utilization**: 使用特征（住院时间、检查数量等）
-- **Medication**: 药物特征（各种糖尿病药物）
-
-## 模型性能
-
-基于测试集评估，各模型的典型性能表现：
-
-| 模型 | AUC | F1-Score | 准确率 |
-|------|-----|----------|--------|
-| 逻辑回归 | 0.670 | 0.580 | 0.65 |
-| 随机森林 | 0.965 | 0.933 | 0.94 |
-| XGBoost | 0.958 | 0.931 | 0.93 |
-
-## 扩展和定制
-
-### 添加新的特征选择方法
-
-在`feature_selector.py`中添加新的方法：
-
+### Adding New Feature Selection Methods
 ```python
 def select_features_by_new_method(self, X, y, top_n=15):
-    # 实现新的特征选择逻辑
+    # Implement new feature selection logic
     pass
 ```
 
-### 添加新的模型
-
-在`model_trainer.py`的`get_models()`方法中添加：
-
+### Adding New Models
 ```python
 def get_models(self):
     return {
-        # 现有模型...
+        # Existing models...
         'NewModel': NewModelClass(random_state=self.random_state)
     }
 ```
 
-### 修改特征工程
-
-在`data_preprocessor.py`中添加新的特征工程方法：
-
+### Adding New Features
 ```python
 def create_new_feature(self, df):
-    # 实现新的特征创建逻辑
+    # Implement new feature creation logic
     return df
 ```
 
-## 故障排除
+## Troubleshooting
 
-### 常见问题
+### Common Issues
 
-1. **内存不足**: 对于大数据集，可以减少特征选择的数量或使用数据采样
-2. **依赖包版本冲突**: 使用虚拟环境并严格按照`requirements.txt`安装
-3. **数据文件缺失**: 确保所有必需的数据文件都在正确的位置
+1. **Memory Issues**: For large datasets, reduce feature selection count or use data sampling
+2. **Package Conflicts**: Use virtual environment and follow `requirements.txt` strictly
+3. **Missing Data Files**: Ensure all required data files are in correct locations
+4. **Database Connection**: Check database credentials and connection settings
 
-### 日志文件
+### Logs
+Check `pipeline.log` for detailed execution information and error messages.
 
-查看`pipeline.log`文件获取详细的执行信息和错误信息。
+## Documentation
 
-## 贡献
+- **USAGE_GUIDE.md**: Detailed usage instructions
+- **CORRECTED_DATA_FLOW.md**: Data flow documentation
+- **pipeline_structure.md**: Architecture overview
+- **docs/**: Additional documentation
 
-欢迎提交问题报告和功能请求。如果要贡献代码：
+## Contributing
 
-1. Fork项目
-2. 创建功能分支
-3. 提交更改
-4. 推送到分支
-5. 创建Pull Request
+We welcome contributions! Please:
 
-## 许可证
+1. Fork the project
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
-本项目采用MIT许可证。
+## License
 
-## 联系方式
+This project is licensed under the MIT License.
 
-如有问题或建议，请通过以下方式联系：
-- 提交GitHub Issue
-- 发送邮件至项目维护者
+## Contact
+
+For questions or suggestions:
+- Create a GitHub Issue
+- Contact the project maintainers
 
 ---
 
-**注意**: 这是一个用于教育和研究目的的项目。在实际医疗应用中，请确保遵守相关的医疗数据隐私法规和伦理准则。
+**Important Note**: This project is for educational and research purposes. For actual healthcare applications, ensure compliance with relevant medical data privacy regulations and ethical guidelines.
+
+## Tags
+
+`#data-science` `#machine-learning` `#healthcare` `#etl-pipeline` `#python` `#sql` `#azure`
